@@ -1,0 +1,25 @@
+.DS_Store
+node_modules/
+/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.baekrc
+.editorconfig
+.eslintignore
+.eslintrc.js
+build
+index.html
+package-lock.json
+package.json
+README.node_modules
+.postcssrc.js
+static

@@ -1,0 +1,25 @@
+{% extends "_layouts/cp" %}
+{% set title = "Commerce Reviews" %}
+{# 
+{% do view.registerAssetBundle('aodihis\\craftcommercereview\\web\\assets\\reviewtable\\ReviewTableAsset') -%} #}
+
+{% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
+
+{% block content %}
+    <div id="table-data"></div>
+{% endblock %}
+
+{% js %}
+var columns = [
+  { name: 'product', title: Craft.t('app', 'Product') },
+  { name: 'rating', title: Craft.t('app', 'Rating') },
+  { name: 'content', title: Craft.t('app', 'Content') },
+  { name: 'reviewer', title: Craft.t('app', 'Reviewer') },
+];
+
+new Craft.VueAdminTable({
+    container: '#table-data',
+    columns: columns,
+    tableDataEndpoint: 'commerce-review/review-cp/get-table-data',
+});
+{% endjs %}
