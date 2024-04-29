@@ -3,9 +3,7 @@
 namespace aodihis\productreview\records;
 
 use aodihis\productreview\db\Table;
-use craft\commerce\records\Order;
 use craft\commerce\records\Product;
-use craft\commerce\records\Variant;
 use craft\db\ActiveRecord;
 use yii\db\ActiveQueryInterface;
 

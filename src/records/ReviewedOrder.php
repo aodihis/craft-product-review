@@ -3,9 +3,7 @@
 namespace aodihis\productreview\records;
 
 use aodihis\productreview\db\Table;
-use craft\commerce\records\Variant;
 use craft\db\ActiveRecord;
-use yii\db\ActiveQueryInterface;
 
 /**
  * 
@@ -16,7 +14,7 @@ use yii\db\ActiveQueryInterface;
  * @property string $uid
  * 
  */
-class ReviewedOrders extends ActiveRecord
+class ReviewedOrder extends ActiveRecord
 {
 
     public static function tableName(): string

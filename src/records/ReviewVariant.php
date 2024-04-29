@@ -17,7 +17,7 @@ use yii\db\ActiveQueryInterface;
  * @property string $uid
  * 
  */
-class ReviewVariants extends ActiveRecord
+class ReviewVariant extends ActiveRecord
 {
 
     public static function tableName(): string

@@ -6,18 +6,17 @@ use aodihis\productreview\db\Table;
 use aodihis\productreview\models\Review as ModelsReview;
 use aodihis\productreview\Plugin;
 use aodihis\productreview\records\Review;
-use aodihis\productreview\records\ReviewedLineItem;
 use aodihis\productreview\records\ReviewedOrder;
-use aodihis\productreview\records\ReviewVariants;
+use aodihis\productreview\records\ReviewVariant;
 use Craft;
 use craft\base\Component;
 use craft\commerce\elements\Order;
 use craft\commerce\elements\Variant;
 use craft\db\ActiveQuery;
-use craft\db\Query;
 use craft\helpers\DateTimeHelper;
 use Exception;
 use DateTime;
+use craft\db\Query;
 
 class Reviews extends Component
 {
@@ -28,6 +27,25 @@ class Reviews extends Component
     public function getReviews(int $productId = null, int $userId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): array
     {
         $query = $this->_buildQuery($productId, $userId, $rating, $sort, $limit, $offset);
+        if ($productId) {
+            $query->andWhere(['productId' => $productId]);
+        }
+
+        if ($userId) {
+            $query->andWhere(['userId' => $userId]);
+        }
+        
+        if ($rating) {
+            $query->andWhere(['rating' => $rating]);
+        } else {
+            $query->andWhere(['not',['rating' => null]]);
+        }
+        
+        if ($limit) {
+            $query->limit($limit);
+        }
+
+        $query->offset(null)->orderBy($sort);
 
         $reviews = $query->all();
         foreach ($reviews as &$review) {
@@ -41,6 +59,25 @@ class Reviews extends Component
     public function getTotalReviews(int $productId = null, int $userId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): int
     {
         $query = $this->_buildQuery($productId, $userId, $rating, $sort, $limit, $offset);
+        if ($productId) {
+            $query->andWhere(['productId' => $productId]);
+        }
+
+        if ($userId) {
+            $query->andWhere(['userId' => $userId]);
+        }
+        
+        if ($rating) {
+            $query->andWhere(['rating' => $rating]);
+        } else {
+            $query->andWhere(['not',['rating' => null]]);
+        }
+        
+        if ($limit) {
+            $query->limit($limit);
+        }
+
+        $query->offset(null)->orderBy($sort);
         return $query->count();
     }
 
@@ -74,16 +111,20 @@ class Reviews extends Component
     public function getItemToReviewForUser(int $userId): array
     {
         $reviews = Review::find()
-        ->alias('reviews')
-        ->addSelect('reviews.lineItemIds')
-        ->where(['userId' => $userId])->andWhere( ['updateCount' => 0])
-        ->leftJoin(Table::PRODUCT_REVIEW_VARIANTS . ' crli', '[[crli.reviewId]]=[[reviews.id]]')
-        ->groupBy(['reviews.id'])->all();
-        dd($reviews);
+                ->addSelect('reviews.id')
+                ->addSelect('GROUP_CONCAT(`variantId` ORDER BY crli.id)')
+                ->alias('reviews')
+                ->leftJoin(Table::PRODUCT_REVIEW_VARIANTS . ' crli', '[[crli.reviewId]]=[[reviews.id]]')
+                ->groupBy(['reviews.id'])->all();
+        
+        $query = $this->_buildQuery();
+        $query->where(['userId' => $userId])->andWhere( ['updateCount' => 0]);
+        $reviews = $query->all();
         foreach ($reviews as &$review) {
-            $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review->toArray()]]);
+            $variantIds = array_map('intval', explode(',', $review['variantIds']));
+            $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
+            $review->variantIds = $variantIds;
         }
-
         return $reviews;
     }
 
@@ -149,9 +190,10 @@ class Reviews extends Component
 
             if ($isNew) {
                 foreach($model->variantIds as $variantId) {
-                    $reviewLineItem = new ReviewVariants();
+                    $reviewLineItem = new ReviewVariant();
                     $reviewLineItem->reviewId = $model->id;
-                    $reviewLineItem->variantId = $$variantId;
+                    $reviewLineItem->variantId = $variantId;
+                    $reviewLineItem->save(false);
                 }
             }
             $transaction->commit();
@@ -182,7 +224,7 @@ class Reviews extends Component
                 continue;
             }
             if (isset($reviews[$productId])) {
-                $reviews[$productId]->addLineItem = $lineItem;
+                $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
                 continue;
             }
 
@@ -193,7 +235,6 @@ class Reviews extends Component
             $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
         }
         
-
         $db = Craft::$app->getDb();
         $transaction = $db->beginTransaction();
 
@@ -213,30 +254,17 @@ class Reviews extends Component
 
     }
 
-    private function _buildQuery(int $productId = null, int $userId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): ActiveQuery
+    private function _buildQuery(): Query
     {
-        $query = Review::find()->andWhere(['not', ['updateCount' => 0]]);
 
-        if ($productId) {
-            $query->andWhere(['productId' => $productId]);
-        }
-
-        if ($userId) {
-            $query->andWhere(['userId' => $userId]);
-        }
-        
-        if ($rating) {
-            $query->andWhere(['rating' => $rating]);
-        } else {
-            $query->andWhere(['not',['rating' => null]]);
-        }
-        
-        if ($limit) {
-            $query->limit($limit);
-        }
-
-        $query->offset(null)->orderBy($sort);
-
-        return $query;
+        return (new Query())
+            ->select([
+                'reviews.*',
+                'GROUP_CONCAT(`variantId` ORDER BY variants.id) as variantIds',
+            ])
+            ->orderBy('reviews.id')
+            ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
+            ->leftJoin(Table::PRODUCT_REVIEW_VARIANTS . ' variants', '[[variants.reviewId]]=[[reviews.id]]')
+            ->groupBy(['reviews.id']);
     }
 }

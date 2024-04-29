@@ -107,7 +107,7 @@ class Review extends Model
         }
 
         if ($this->variantIds) {
-            $this->_variants = Purchasable::find()->id($this->variantIds);
+            $this->_variants = Variant::find()->id($this->variantIds)->all();
             return  $this->_variants;
         }
 
