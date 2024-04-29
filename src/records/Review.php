@@ -1,8 +1,8 @@
 <?php 
 
-namespace aodihis\craftcommercereview\records;
+namespace aodihis\productreview\records;
 
-use aodihis\craftcommercereview\db\Table;
+use aodihis\productreview\db\Table;
 use craft\commerce\records\Order;
 use craft\commerce\records\Product;
 use craft\commerce\records\Variant;
@@ -27,7 +27,7 @@ class Review extends ActiveRecord
 
     public static function tableName(): string
     {
-        return Table::COMMERCE_REVIEW_REVIEWS;
+        return Table::PRODUCT_REVIEW_REVIEWS;
     }
 
     public function getProduct(): ActiveQueryInterface

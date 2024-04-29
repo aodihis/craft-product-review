@@ -1,12 +1,12 @@
 <?php
 
-namespace aodihis\craftcommercereview;
+namespace aodihis\productreview;
 
-use aodihis\craftcommercereview\behaviors\ProductBehavior;
-use aodihis\craftcommercereview\behaviors\UserBehavior;
+use aodihis\productreview\behaviors\ProductBehavior;
+use aodihis\productreview\behaviors\UserBehavior;
 use Craft;
-use aodihis\craftcommercereview\models\Settings;
-use aodihis\craftcommercereview\plugin\Services;
+use aodihis\productreview\models\Settings;
+use aodihis\productreview\plugin\Services;
 use craft\base\Event;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
@@ -64,7 +64,7 @@ class Plugin extends BasePlugin
 
     protected function settingsHtml(): ?string
     {
-        return Craft::$app->view->renderTemplate('commerce-review/_settings.twig', [
+        return Craft::$app->view->renderTemplate('product-review/_settings.twig', [
             'plugin' => $this,
             'settings' => $this->getSettings(),
         ]);
@@ -82,8 +82,8 @@ class Plugin extends BasePlugin
             User::class,
             User::EVENT_DEFINE_BEHAVIORS,
             function(DefineBehaviorsEvent $event) {
-                $event->behaviors['commerce-review:user'] = UserBehavior::class;
-                $event->behaviors['commerce-review:product'] = ProductBehavior::class;
+                $event->behaviors['product-review:user'] = UserBehavior::class;
+                $event->behaviors['product-review:product'] = ProductBehavior::class;
             }
         );
     }
@@ -103,7 +103,7 @@ class Plugin extends BasePlugin
                 // ...
 
                 if ($orderHistory->getNewStatus()->handle === $this->getSettings()->reviewOnOrderStatus) {
-                    $this->getReviews()->addReviewOnOrderStatusFulfill($order);
+                    $this->getReviews()->createReviewForOrder($order);
                 }
             }
         );

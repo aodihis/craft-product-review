@@ -1,14 +1,18 @@
 <?php
 
-namespace aodihis\craftcommercereview\services;
+namespace aodihis\productreview\services;
 
-use aodihis\craftcommercereview\models\Review as ModelsReview;
-use aodihis\craftcommercereview\Plugin;
-use aodihis\craftcommercereview\records\Review;
-use aodihis\craftcommercereview\records\ReviewedLineItem;
+use aodihis\productreview\db\Table;
+use aodihis\productreview\models\Review as ModelsReview;
+use aodihis\productreview\Plugin;
+use aodihis\productreview\records\Review;
+use aodihis\productreview\records\ReviewedLineItem;
+use aodihis\productreview\records\ReviewedOrder;
+use aodihis\productreview\records\ReviewVariants;
 use Craft;
 use craft\base\Component;
 use craft\commerce\elements\Order;
+use craft\commerce\elements\Variant;
 use craft\db\ActiveQuery;
 use craft\db\Query;
 use craft\helpers\DateTimeHelper;
@@ -69,10 +73,15 @@ class Reviews extends Component
      */
     public function getItemToReviewForUser(int $userId): array
     {
-        $reviews = Review::find()->where(['userId' => $userId])->andWhere( ['updateCount' => 0])->all();
-
+        $reviews = Review::find()
+        ->alias('reviews')
+        ->addSelect('reviews.lineItemIds')
+        ->where(['userId' => $userId])->andWhere( ['updateCount' => 0])
+        ->leftJoin(Table::PRODUCT_REVIEW_VARIANTS . ' crli', '[[crli.reviewId]]=[[reviews.id]]')
+        ->groupBy(['reviews.id'])->all();
+        dd($reviews);
         foreach ($reviews as &$review) {
-            $coupon = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
+            $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review->toArray()]]);
         }
 
         return $reviews;
@@ -97,7 +106,7 @@ class Reviews extends Component
 
     public function saveReview(ModelsReview $model, $runValidation = true): bool
     {
-        $$isNew = !$model->id;
+        $isNew = !$model->id;
 
         if ($isNew) {
             $record = new Review();
@@ -105,7 +114,7 @@ class Reviews extends Component
             $record = Review::findOne($model->id);
 
             if (!$record) {
-                throw new Exception(Craft::t('commerce-review', 'No review exists with the ID “{id}”',
+                throw new Exception(Craft::t('product-review', 'No review exists with the ID “{id}”',
                     ['id' => $model->id]));
             }
         }
@@ -139,10 +148,10 @@ class Reviews extends Component
             $model->dateUpdated = DateTimeHelper::toDateTime($record->dateUpdated);
 
             if ($isNew) {
-                foreach($model->lineItemIds as $lineItemId) {
-                    $reviewLineItem = new ReviewedLineItem();
+                foreach($model->variantIds as $variantId) {
+                    $reviewLineItem = new ReviewVariants();
                     $reviewLineItem->reviewId = $model->id;
-                    $reviewLineItem->lineItemId = $lineItemId;
+                    $reviewLineItem->variantId = $$variantId;
                 }
             }
             $transaction->commit();
@@ -154,36 +163,54 @@ class Reviews extends Component
         return true;
     }
     
+    public function isOrderAlreadyReviewed(int $orderId) : bool {
+        $totalCount = ReviewedOrder::find()->where(['orderId' => $orderId])->count();
+        return $totalCount > 0;
+    }
+
     public function createReviewForOrder(Order $order) : void 
     {
-        $lineItemIds = array_map(fn($ln) => $ln->id, $order->lineItems);
-
-        //check if the line items already added or not.
-        $totalReviewedLineItemsInDb = ReviewedLineItem::find()->where(['lineItemId' => $lineItemIds])->count();
-
-        if ($totalReviewedLineItemsInDb){
+        if ($this->isOrderAlreadyReviewed($order->id)) {
             return;
         }
 
         $reviews = [];
 
         foreach($order->lineItems as $lineItem) {
-            if (isset($reviews[$lineItem->productId])) {
-                $reviews[$lineItem->productId]->addLineItem = $lineItem;
+            $productId = $lineItem->purchasable->productId;
+            if (!$lineItem->purchasable instanceof Variant) {
+                continue;
+            }
+            if (isset($reviews[$productId])) {
+                $reviews[$productId]->addLineItem = $lineItem;
                 continue;
             }
 
-            $reviews[$lineItem->productId] = new Review();
-            $reviews[$lineItem->productId]->productId = $lineItem->productId;
-            $reviews[$lineItem->productId]->userId = $order->customerId;
-            $reviews[$lineItem->productId]->updateCount = 0;
-            $reviews[$lineItem->productId]->addLineItem = $lineItem;
+            $reviews[$productId] = new ModelsReview();
+            $reviews[$productId]->productId = $productId;
+            $reviews[$productId]->userId = $order->customerId;
+            $reviews[$productId]->updateCount = 0;
+            $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
         }
         
 
-        foreach($reviews as $review) {
-            $this->saveReview($review, false);
+        $db = Craft::$app->getDb();
+        $transaction = $db->beginTransaction();
+
+
+        try {
+            foreach($reviews as $review) {
+                $this->saveReview($review, false);
+            }
+            $reviewdOrder = new ReviewedOrder();
+            $reviewdOrder->orderId = $order->id;
+            $reviewdOrder->save(false);
+            $transaction->commit();
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw $e;
         }
+
     }
 
     private function _buildQuery(int $productId = null, int $userId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): ActiveQuery

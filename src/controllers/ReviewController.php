@@ -1,9 +1,9 @@
 <?php 
 
-namespace aodihis\craftcommercereview\controllers;
+namespace aodihis\productreview\controllers;
 
-use aodihis\craftcommercereview\models\Review;
-use aodihis\craftcommercereview\Plugin;
+use aodihis\productreview\models\Review;
+use aodihis\productreview\Plugin;
 use Craft;
 use craft\commerce\elements\Order;
 use craft\commerce\elements\Variant;
@@ -28,7 +28,7 @@ class ReviewController extends Controller
         $review = Plugin::getInstance()->getReviews()->getProductReviews($id);
 
         if(!$review){
-            throw new NotFoundHttpException(Craft::t('commerce-review', "Unable to find review with id: {$id}"));
+            throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: {$id}"));
         }
 
         if ($review->userId !== $currentUser->getId()) {
@@ -36,7 +36,7 @@ class ReviewController extends Controller
         }
 
         if (!Plugin::getInstance()->getReviews()->isReviewCanBeUpdated($review)) {
-            $review->addError(Craft::t('commerce-review', "The item are expired to reviewd."));
+            $review->addError(Craft::t('product-review', "The item are expired to reviewd."));
         }
         $review->updateCount +=1;
         $review->rating     = (int)$this->request->getBodyParam('rating');
@@ -44,7 +44,7 @@ class ReviewController extends Controller
         
         
         if (!$review->validate()) {
-            $error = Craft::t('commerce-review', 'Unable to save review.');
+            $error = Craft::t('product-review', 'Unable to save review.');
             $message = $this->request->getValidatedBodyParam('failMessage') ?? $error;
 
             return $this->asModelFailure(
@@ -57,7 +57,7 @@ class ReviewController extends Controller
     
 
         if (!Plugin::getInstance()->getReviews()->saveReview($review)) {
-            $error = Craft::t('commerce-review', 'Unable to save review.');
+            $error = Craft::t('product-review', 'Unable to save review.');
             $message = $this->request->getValidatedBodyParam('failMessage') ?? $error;
 
             return $this->asModelFailure(
@@ -67,7 +67,7 @@ class ReviewController extends Controller
             );
         }
 
-        $message = Craft::t('commerce-review', 'Review saved.');
+        $message = Craft::t('product-review', 'Review saved.');
         return $this->asModelSuccess(
             $review,
             $message,

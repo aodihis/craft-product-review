@@ -1,8 +1,8 @@
 <?php
-namespace aodihis\craftcommercereview\models;
+namespace aodihis\productreview\models;
 
-use aodihis\craftcommercereview\Plugin;
-use aodihis\craftcommercereview\records\Review as RecordsReview;
+use aodihis\productreview\Plugin;
+use aodihis\productreview\records\Review as RecordsReview;
 use craft\base\Model;
 use craft\commerce\base\Purchasable;
 use craft\commerce\elements\Order;
@@ -20,8 +20,9 @@ class Review extends Model
     public ?int $productId          = null;
     
     /** @var int[] */
-    public ?array $lineItemIds      = [];
+    public ?array $variantIds      = [];
 
+    public int $updateCount         = 0;
     public ?int $userId             = null;
     public ?int $rating             = null;
     public ?string $content         = null;
@@ -30,18 +31,11 @@ class Review extends Model
     public ?string $uid             = null;
 
 
-    private Product $_product = null;
-    private User $_user = null;
-
-    
-     /** @var int[] */
-     private ?array $_purchasableIds = [];
+    private ?Product $_product = null;
+    private ?User $_user = null;
 
     /** @var Purchasable[]|Variant[] */
-    private array $_purchasables = [];
-
-     /** @var LiteItem[] */
-    private array $_lineItems = [];
+    private array $_variants = [];
 
 
     public function getProduct(): ?Product
@@ -55,16 +49,16 @@ class Review extends Model
             return $this->_product; 
         }
 
-        if ($this->_variant) {
-            $this->_product = $this->_variant->owner;
-            return $this->_product;
-        }
+        // if ($this->_variants) {
+        //     $this->_product = $this->_variants[0]->owner;
+        //     return $this->_product;
+        // }
 
-        if ($this->variantId) {
-            $variant = $this->getVariant();
-            $this->_product = $variant->owner;
-            return $this->_product;
-        }
+        // if ($this->variantIds) {
+        //     $variants = $this->getVariants();
+        //     $this->_product = $variants[0]->owner;
+        //     return $this->_product;
+        // }
 
         return null;
         
@@ -86,65 +80,41 @@ class Review extends Model
         return $this->_user;
     }
 
+    /**
+     * @params Variant[] $variants
+     */
+    public function setVariants(array $variants) : void {
+        $this->_variants = $variants;
+        $this->variantIds = array_map(static function($variant) {
+            return $variant->id;
+        }, $variants);
+    }
+
+    public function addVariant(Variant $variant): void
+    {
+        $this->_variants[] = $variant;
+        $this->variantIds[] = $variant->id;
+    }
+
 
     /**
      * @return Purchasables[]|Variant[]
      */
-    public function getPurchasables(): array
+    public function getVariants(): array
     {
-        if ($this->_purchasables) {
-            return $this->_purchasables;
+        if ($this->_variants) {
+            return $this->_variants;
         }
 
-        if ($this->_purchasableIds) {
-            $this->_purchasables = Purchasable::find()->id($this->_purchasableIds);
-            return  $this->_purchasables;
+        if ($this->variantIds) {
+            $this->_variants = Purchasable::find()->id($this->variantIds);
+            return  $this->_variants;
         }
 
-        $lineItems = $this->getLineItems();
-        foreach($lineItems as $lineItem) {
-            $this->_purchasableIds[]    = $lineItem->purchasableId;
-            $this->_purchasables[]      = $lineItem->purchasable;
-        }
-        return $this->_purchasables;
+        return [];
     }
 
-    /**
-     * @return LineItem[]
-     */
-    public function getLineItems(): array
-    {
-        if($this->_lineItems) {
-            return $this->_lineItems;
-        }
 
-        if ($this->lineItemIds) {
-            foreach($this->lineItemIds as $lineItemId) {
-                $this->_lineItems[] = Commerce::getInstance()->lineItems->getLineItemById($lineItemId);
-            }
-        }
-        
-        return $this->_lineItems;
-    }
-
-    /** @param LineItem[] $lineItems */
-    public function setLineItems(array $lineItems): void
-    {
-        $this->_lineItems   = $lineItems;
-        $this->lineItemIds  = array_map(static function($lineItem){
-            return $lineItem->id;
-        },$lineItems);
-        foreach ($lineItems as $lineItem) {
-            $this->_purchasables[] = $lineItem->purchasable;
-            $this->purchasableIds[] = $lineItem->purchasableId;
-        };
-    }
-
-    public function addLineItems(LineItem $lineItem): void
-    {
-        $this->_lineItems[] = $lineItem;
-        $this->lineItemIds[] = $lineItem->id;
-    }
 
     protected function defineRules(): array
     {

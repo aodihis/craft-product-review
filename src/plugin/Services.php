@@ -1,7 +1,7 @@
 <?php
-namespace aodihis\craftcommercereview\plugin;
+namespace aodihis\productreview\plugin;
 
-use aodihis\craftcommercereview\services\Reviews;
+use aodihis\productreview\services\Reviews;
 
 /**
  * @property Reviews $reviews

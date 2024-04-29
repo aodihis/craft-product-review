@@ -2,10 +2,11 @@
 /**
  */
 
-namespace aodihis\craftcommercereview\db;
+namespace aodihis\productreview\db;
 
 abstract class Table 
 {
-    public const COMMERCE_REVIEW_LINE_ITEMS = '{{%comrev_liteitems}}';
+    public const COMMERCE_REVIEWED_ORDERS = '{{%comrev_reviewed_orders}}';
+    public const COMMERCE_REVIEW_VARIANTS = '{{%comrev_reviews_variants}}';
     public const COMMERCE_REVIEW_REVIEWS = '{{%comrev_reviews}}';
 }

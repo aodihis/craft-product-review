@@ -1,8 +1,8 @@
 <?php 
 
-namespace aodihis\craftcommercereview\records;
+namespace aodihis\productreview\records;
 
-use aodihis\craftcommercereview\db\Table;
+use aodihis\productreview\db\Table;
 use craft\commerce\records\Variant;
 use craft\db\ActiveRecord;
 use yii\db\ActiveQueryInterface;
@@ -11,18 +11,18 @@ use yii\db\ActiveQueryInterface;
  * 
  * @property int $id ID
  * @property int $reviewId Review ID
- * @property int $lineItemId Line Item ID
+ * @property int $variantId Variant ID
  * @property DateTime $dateCreated
  * @property DateTime $dateUpdated
  * @property string $uid
  * 
  */
-class ReviewedLineItem extends ActiveRecord
+class ReviewVariants extends ActiveRecord
 {
 
     public static function tableName(): string
     {
-        return Table::COMMERCE_REVIEW_LINE_ITEMS;
+        return Table::PRODUCT_REVIEW_VARIANTS;
     }
 
     public function getVariant(): ActiveQueryInterface

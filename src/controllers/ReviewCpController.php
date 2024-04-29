@@ -1,10 +1,10 @@
 <?php 
 
-namespace aodihis\craftcommercereview\controllers;
+namespace aodihis\productreview\controllers;
 
-use aodihis\craftcommercereview\models\Review;
-use aodihis\craftcommercereview\Plugin;
-use aodihis\craftcommercereview\web\assets\reviewtable\ReviewTableAsset;
+use aodihis\productreview\models\Review;
+use aodihis\productreview\Plugin;
+use aodihis\productreview\web\assets\reviewtable\ReviewTableAsset;
 use Craft;
 use craft\commerce\elements\Order;
 use craft\commerce\elements\Variant;

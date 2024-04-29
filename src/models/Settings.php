@@ -1,6 +1,6 @@
 <?php
 
-namespace aodihis\craftcommercereview\models;
+namespace aodihis\productreview\models;
 
 use Craft;
 use craft\base\Model;
@@ -16,6 +16,17 @@ class Settings extends Model
     public int $maxDaysToReview = 30;
 
     public ?string $reviewOnOrderStatus = null;
+
+    public function getMaxRating(): int
+    {
+        return self::$maxRating;
+    }
+
+    public function getMaxReviewLimit(): int
+    {
+        return self::$maxReviewLimit;
+    }
+
 
     protected function defineRules(): array
     {

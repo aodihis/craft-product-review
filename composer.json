@@ -1,18 +1,18 @@
 {
-  "name": "aodihis/craft-commerce-review",
+  "name": "aodihis/product-review",
   "description": "Extend your commerce review exprience",
   "type": "craft-plugin",
   "license": "proprietary",
   "support": {
     "email": "aodihis@gmail.com",
-    "issues": "https://github.com/aodihis/craft-commerce-review/issues?state=open",
-    "source": "https://github.com/aodihis/craft-commerce-review",
-    "docs": "https://github.com/aodihis/craft-commerce-review",
-    "rss": "https://github.com/aodihis/craft-commerce-review/releases.atom"
+    "issues": "https://github.com/aodihis/craft-product-review/issues?state=open",
+    "source": "https://github.com/aodihis/craft-product-review",
+    "docs": "https://github.com/aodihis/craft-product-review"
   },
   "require": {
     "php": ">=8.2",
-    "craftcms/cms": "^5.0.0"
+    "craftcms/cms": "^5.0.0",
+    "craftcms/commerce": "^5.0.0-beta3"
   },
   "require-dev": {
     "craftcms/ecs": "dev-main",
@@ -20,14 +20,14 @@
   },
   "autoload": {
     "psr-4": {
-      "aodihis\\craftcommercereview\\": "src/"
+      "aodihis\\productreview\\": "src/"
     }
   },
   "extra": {
-    "handle": "commerce-review",
-    "name": "Commerce Review",
+    "handle": "product-review",
+    "name": "Product Review",
     "developer": "aodihis",
-    "documentationUrl": "https://github.com/aodihis/craft-commerce-review"
+    "documentationUrl": "https://github.com/aodihis/craft-product-review"
   },
   "scripts": {
     "check-cs": "ecs check --ansi",

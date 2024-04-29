@@ -1,8 +1,8 @@
 <?php 
 
-namespace aodihis\craftcommercereview\behaviors;
+namespace aodihis\productreview\behaviors;
 
-use aodihis\craftcommercereview\Plugin;
+use aodihis\productreview\Plugin;
 use yii\base\Behavior;
 
 class ProductBehavior extends Behavior

@@ -1,5 +1,5 @@
-{# @var plugin \aodihis\craftcommercereview\Plugin #}
-{# @var settings \aodihis\craftcommercereview\models\Settings #}
+{# @var plugin \aodihis\productreview\Plugin #}
+{# @var settings \aodihis\productreview\models\Settings #}
 
 {% import '_includes/forms.twig' as forms %}
 
@@ -11,8 +11,8 @@
 {% endfor %}
 
 {{ forms.selectField({
-    label: "Order status for product to review"|t('commerce-review'),
-    instructions: "Purchased products will be allowed to review after the order moved to which order status?"|t('commerce-review'),
+    label: "Order status for product to review"|t('product-review'),
+    instructions: "Purchased products will be allowed to review after the order moved to which order status?"|t('product-review'),
     id: 'reviewOnOrderStatus',
     name: 'reviewOnOrderStatus',
     options: orderStatues,
@@ -21,8 +21,8 @@
 
 
 {{ forms.textField({
-    label: "Maximum days to review (put 0 if you want infinite.)"|t('commerce-review'),
-    instructions: "Maximum days for customer to allow review the product after the order status changed to desired one."|t('commerce-review'),
+    label: "Maximum days to review (put 0 if you want infinite.)"|t('product-review'),
+    instructions: "Maximum days for customer to allow review the product after the order status changed to desired one."|t('product-review'),
     id: 'maxDaysToReview',
     name: 'maxDaysToReview',
     value: settings.maxDaysToReview,

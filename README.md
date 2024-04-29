@@ -1,10 +1,10 @@
-# Commerce Review
+# Product Review
 
 Extend your commerce review exprience
 
 ## Requirements
 
-This plugin requires Craft CMS 5.0.0 or later, and PHP 8.2 or later.
+This plugin requires Craft CMS 5.0.0 or later, Craft Commerce 5.0.0 and PHP 8.2 or later.
 
 ## Installation
 
@@ -23,8 +23,8 @@ Open your terminal and run the following commands:
 cd /path/to/my-project.test
 
 # tell Composer to load the plugin
-composer require aodihis/craft-commerce-review
+composer require aodihis/craft-product-review
 
 # tell Craft to install the plugin
-./craft plugin/install commerce-review
+./craft plugin/install product-review
 ```

@@ -2,10 +2,10 @@
 /**
  */
 
-namespace aodihis\craftcommercereview\migrations;
+namespace aodihis\productreview\migrations;
 
-use aodihis\craftcommercereview\db\Table;
-use aodihis\craftcommercereview\records\Review;
+use aodihis\productreview\db\Table;
+use aodihis\productreview\records\Review;
 use Craft;
 use craft\commerce\db\Table as CommerceTable;
 use craft\commerce\elements\Order;
@@ -53,8 +53,8 @@ class Install extends Migration
     public function createTables(): void
     {
         
-        $this->archiveTableIfExists(Table::COMMERCE_REVIEW_REVIEWS);
-        $this->createTable(Table::COMMERCE_REVIEW_REVIEWS, [
+        $this->archiveTableIfExists(Table::PRODUCT_REVIEW_REVIEWS);
+        $this->createTable(Table::PRODUCT_REVIEW_REVIEWS, [
             'id' => $this->primaryKey(),
             'productId' => $this->integer()->notNull(),
             'userId' => $this->integer()->notNull(),
@@ -66,11 +66,20 @@ class Install extends Migration
             'uid' => $this->uid(),
         ]);
 
-        $this->archiveTableIfExists(Table::COMMERCE_REVIEW_LINE_ITEMS);
-        $this->createTable(Table::COMMERCE_REVIEW_LINE_ITEMS, [
+        $this->archiveTableIfExists(Table::PRODUCT_REVIEW_VARIANTS);
+        $this->createTable(Table::PRODUCT_REVIEW_VARIANTS, [
             'id' => $this->primaryKey(),
             'reviewId' => $this->integer()->notNull(),
-            'lineItemId' => $this->integer()->notNull(),
+            'variantId' => $this->integer()->notNull(),
+            'dateCreated' => $this->dateTime()->notNull(),
+            'dateUpdated' => $this->dateTime()->notNull(),
+            'uid' => $this->uid(),
+        ]);
+
+        $this->archiveTableIfExists(Table::PRODUCT_REVIEWED_ORDERS);
+        $this->createTable(Table::PRODUCT_REVIEWED_ORDERS, [
+            'id' => $this->primaryKey(),
+            'orderId' => $this->integer()->notNull(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),
@@ -93,7 +102,7 @@ class Install extends Migration
      */
     public function dropProjectConfig(): void
     {
-        Craft::$app->projectConfig->remove('commerce-review');
+        Craft::$app->projectConfig->remove('product-review');
     }
 
     /**
@@ -101,8 +110,10 @@ class Install extends Migration
      */
     public function createIndexes(): void
     {
-        $this->createIndex(null, Table::COMMERCE_REVIEW_REVIEWS, 'productId', false);
-        $this->createIndex(null, Table::COMMERCE_REVIEW_REVIEWS, 'userId', false);
+        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'productId', false);
+        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'userId', false);
+        $this->createIndex(null, Table::PRODUCT_REVIEW_VARIANTS, 'variantId', false);
+        $this->createIndex(null, Table::PRODUCT_REVIEWED_ORDERS, 'orderId', false);
     }
 
     /**
@@ -110,10 +121,9 @@ class Install extends Migration
      */
     public function addForeignKeys(): void
     {
-        $this->addForeignKey(null, Table::COMMERCE_REVIEW_REVIEWS, ['productId'], CommerceTable::PRODUCTS, ['id'], 'CASCADE'); 
-        $this->addForeignKey(null, Table::COMMERCE_REVIEW_REVIEWS, ['userId'], DbTable::USERS, ['id'], 'CASCADE');
-        $this->addForeignKey(null, Table::COMMERCE_REVIEW_LINE_ITEMS, ['reviewId'], Table::COMMERCE_REVIEW_REVIEWS, ['id'], 'CASCADE');
-        $this->addForeignKey(null, Table::COMMERCE_REVIEW_LINE_ITEMS, ['lineItemId'], CommerceTable::LINEITEMS, ['id'], 'CASCADE');
+        $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['productId'], CommerceTable::PRODUCTS, ['id'], 'CASCADE'); 
+        $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['userId'], DbTable::USERS, ['id'], 'CASCADE');
+        $this->addForeignKey(null, Table::PRODUCT_REVIEW_VARIANTS, ['reviewId'], Table::PRODUCT_REVIEW_REVIEWS, ['id'], 'CASCADE');
     }
 
     /**
