@@ -14,7 +14,7 @@ use yii\db\ActiveQueryInterface;
  * @property int $userId User ID
  * @property int $updateCount Update Count
  * @property int $rating Rating
- * @property string $content Content
+ * @property string $comment comment
  * @property DateTime $dateCreated
  * @property DateTime $dateUpdated
  * @property string $uid

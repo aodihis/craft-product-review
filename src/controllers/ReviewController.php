@@ -24,8 +24,10 @@ class ReviewController extends Controller
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         $id    = (int)$this->request->getRequiredBodyParam('id');
-
-        $review = Plugin::getInstance()->getReviews()->getProductReviews($id);
+        $rating = (int)$this->request->getBodyParam('rating');
+        $comment = (string)$this->request->getBodyParam('comment');
+        
+        $review = Plugin::getInstance()->getReviews()->getReviewById($id);
 
         if(!$review){
             throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: {$id}"));
@@ -35,13 +37,12 @@ class ReviewController extends Controller
             $review->addError("User are not permitted to update this review.");
         }
 
-        if (!Plugin::getInstance()->getReviews()->isReviewCanBeUpdated($review)) {
+        if (!$review->getIsEditable()) {
             $review->addError(Craft::t('product-review', "The item are expired to reviewd."));
         }
         $review->updateCount +=1;
-        $review->rating     = (int)$this->request->getBodyParam('rating');
-        $review->content    = (string)$this->request->getBodyParam('content');
-        
+        $review->rating     = $rating;
+        $review->comment    = $comment;
         
         if (!$review->validate()) {
             $error = Craft::t('product-review', 'Unable to save review.');

@@ -49,12 +49,29 @@ class Reviews extends Component
 
         $reviews = $query->all();
         foreach ($reviews as &$review) {
+            $variantIds = array_map('intval', explode(',', $review['variantIds']));
             $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
+            $review->variantIds = $variantIds;
         }
 
         return $reviews;
     }
 
+    public function getReviewById(int $id): ?ModelsReview
+    {
+        $query = $this->_buildQuery();
+        $query->where(['reviews.id' => $id]);
+        $record =  $query->one();
+
+        if (!$record) {
+            return null;
+        }
+        $model = new ModelsReview();
+        $variantIds = array_map('intval', explode(',', $record['variantIds']));
+        $model = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $record]]);
+        $model->variantIds = $variantIds; 
+        return $model;
+    }
 
     public function getTotalReviews(int $productId = null, int $userId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): int
     {
@@ -110,13 +127,6 @@ class Reviews extends Component
      */
     public function getItemToReviewForUser(int $userId): array
     {
-        $reviews = Review::find()
-                ->addSelect('reviews.id')
-                ->addSelect('GROUP_CONCAT(`variantId` ORDER BY crli.id)')
-                ->alias('reviews')
-                ->leftJoin(Table::PRODUCT_REVIEW_VARIANTS . ' crli', '[[crli.reviewId]]=[[reviews.id]]')
-                ->groupBy(['reviews.id'])->all();
-        
         $query = $this->_buildQuery();
         $query->where(['userId' => $userId])->andWhere( ['updateCount' => 0]);
         $reviews = $query->all();
@@ -128,22 +138,7 @@ class Reviews extends Component
         return $reviews;
     }
 
-    public function isReviewCanBeUpdated(Review $review):bool
-    {
-        $currentTime = new DateTime("now");
-        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
-        $reviewDateCreated = $review->dateCreated;
 
-        if (($maxDaysToReview !== 0) && ($reviewDateCreated->modify("+ {$maxDaysToReview} day") > $currentTime)){
-            return false;
-        }
-
-        if ($review->updateCount > Plugin::getInstance()->getSettings()->maxReviewLimit) {
-            return false;
-        }
-
-        return true;
-    }
 
     public function saveReview(ModelsReview $model, $runValidation = true): bool
     {
@@ -171,7 +166,7 @@ class Reviews extends Component
             'userId',
             'updateCount',
             'rating',
-            'content',
+            'comment',
         ];
         foreach ($fields as $field) {
             $record->$field = $model->$field;

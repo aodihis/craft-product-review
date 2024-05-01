@@ -25,7 +25,7 @@ class Review extends Model
     public int $updateCount         = 0;
     public ?int $userId             = null;
     public ?int $rating             = null;
-    public ?string $content         = null;
+    public ?string $comment         = null;
     public ?DateTIme $dateCreated   = null;
     public ?DateTime $dateUpdated   = null;
     public ?string $uid             = null;
@@ -74,10 +74,7 @@ class Review extends Model
             $this->_user = User::find()->id($this->userId)->one();
             return $this->_user;
         } 
-
-        $order = $this->getOrder();
-        $this->_user = $order ? $order->getCustomer() : null;
-        return $this->_user;
+        return null;
     }
 
     /**
@@ -112,6 +109,23 @@ class Review extends Model
         }
 
         return [];
+    }
+
+    public function getIsEditable(): bool
+    {
+        $currentTime = new DateTime("now");
+        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
+        $reviewDateCreated = clone $this->dateCreated;
+
+        if (($maxDaysToReview !== 0) && ($reviewDateCreated === null || ($reviewDateCreated->modify("+ {$maxDaysToReview} day") > $currentTime))){
+            return false;
+        }
+
+        if ($this->updateCount > Plugin::getInstance()->getSettings()->maxReviewLimit) {
+            return false;
+        }
+
+        return true;
     }
 
 

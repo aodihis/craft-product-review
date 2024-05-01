@@ -60,7 +60,7 @@ class Install extends Migration
             'userId' => $this->integer()->notNull(),
             'updateCount' => $this->integer()->notNull()->defaultValue(0),
             'rating' => $this->tinyInteger(2),
-            'content' => $this->text(),
+            'comment' => $this->text(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),

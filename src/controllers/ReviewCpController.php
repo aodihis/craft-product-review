@@ -34,7 +34,7 @@ class ReviewCpController extends Controller
                 'id' => $review->id,
                 'product' => Html::tag('div',Html::a($review->product->title, $review->product->getCpEditUrl)),
                 'rating' => $review->rating,
-                'content' => $review->content,
+                'comment' => $review->comment,
                 'reviewer' =>  Html::tag('div',Html::a($review->user->fullName, $review->user->getCpEditUrl))
                 ];
         }

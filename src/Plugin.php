@@ -7,7 +7,9 @@ use aodihis\productreview\behaviors\UserBehavior;
 use Craft;
 use aodihis\productreview\models\Settings;
 use aodihis\productreview\plugin\Services;
+use aodihis\productreview\web\twig\ProductReviewVariable;
 use craft\base\Event;
+use yii\base\Event as YiiEvent;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
 use craft\elements\User;
@@ -18,7 +20,7 @@ use craft\commerce\models\OrderHistory;
 use craft\commerce\elements\Order;
 use craft\events\RegisterCpNavItemsEvent;
 use craft\web\twig\variables\Cp;
-
+use craft\web\twig\variables\CraftVariable;
 
 /**
  * Commerce Review plugin
@@ -74,6 +76,7 @@ class Plugin extends BasePlugin
     {
         $this->registerUserBehavior();
         $this->registerOnOrderStatusChange();
+        $this->registerTwigVariable();
     }
 
     private function registerUserBehavior(): void
@@ -105,6 +108,21 @@ class Plugin extends BasePlugin
                 if ($orderHistory->getNewStatus()->handle === $this->getSettings()->reviewOnOrderStatus) {
                     $this->getReviews()->createReviewForOrder($order);
                 }
+            }
+        );
+    }
+
+    private function registerTwigVariable(): void
+    {
+        Event::on(
+            CraftVariable::class,
+            CraftVariable::EVENT_INIT,
+            function(YiiEvent $e) {
+                /** @var CraftVariable $variable */
+                $variable = $e->sender;
+    
+                // Attach a service:
+                $variable->set('productReview', ProductReviewVariable::class);
             }
         );
     }
