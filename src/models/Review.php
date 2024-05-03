@@ -18,7 +18,7 @@ class Review extends Model
 {
     public ?int $id                 = null;
     public ?int $productId          = null;
-    
+    public ?int $orderId            = null;
     /** @var int[] */
     public ?array $variantIds      = [];
 
@@ -115,7 +115,7 @@ class Review extends Model
     {
         $currentTime = new DateTime("now");
         $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
-        $reviewDateCreated = clone $this->dateCreated;
+        $reviewDateCreated = $this->dateCreated;
 
         if (($maxDaysToReview !== 0) && ($reviewDateCreated === null || ($reviewDateCreated->modify("+ {$maxDaysToReview} day") > $currentTime))){
             return false;
@@ -134,8 +134,8 @@ class Review extends Model
     {
         $maxRating = Plugin::getInstance()->getSettings()->maxRating;
         $rules = parent::defineRules();
-        $rules[] = [['id', 'productId', 'userId', 'rating', 'updateCount'], 'safe'];
-        $rules[] = [['productId', 'lineItemIds', 'userId'], 'required'];
+        $rules[] = [['id', 'productId', 'orderId','userId', 'rating', 'updateCount'], 'safe'];
+        $rules[] = [['productId', 'orderId', 'variantIds', 'userId'], 'required'];
         $rules[] = ['rating', 'integer', 'min' => 1, 'max' => $maxRating, 'when' => function($model) {
             return $model->updateCount > 0;
         }];

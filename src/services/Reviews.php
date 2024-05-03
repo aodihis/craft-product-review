@@ -49,9 +49,8 @@ class Reviews extends Component
 
         $reviews = $query->all();
         foreach ($reviews as &$review) {
-            $variantIds = array_map('intval', explode(',', $review['variantIds']));
+            $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
             $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
-            $review->variantIds = $variantIds;
         }
 
         return $reviews;
@@ -67,9 +66,8 @@ class Reviews extends Component
             return null;
         }
         $model = new ModelsReview();
-        $variantIds = array_map('intval', explode(',', $record['variantIds']));
+        $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
         $model = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $record]]);
-        $model->variantIds = $variantIds; 
         return $model;
     }
 
@@ -131,9 +129,8 @@ class Reviews extends Component
         $query->where(['userId' => $userId])->andWhere( ['updateCount' => 0]);
         $reviews = $query->all();
         foreach ($reviews as &$review) {
-            $variantIds = array_map('intval', explode(',', $review['variantIds']));
+            $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
             $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
-            $review->variantIds = $variantIds;
         }
         return $reviews;
     }
@@ -163,6 +160,7 @@ class Reviews extends Component
 
         $fields = [
             'productId',
+            'orderId',
             'userId',
             'updateCount',
             'rating',
@@ -201,7 +199,7 @@ class Reviews extends Component
     }
     
     public function isOrderAlreadyReviewed(int $orderId) : bool {
-        $totalCount = ReviewedOrder::find()->where(['orderId' => $orderId])->count();
+        $totalCount = Review::find()->where(['orderId' => $orderId])->count();
         return $totalCount > 0;
     }
 
@@ -225,28 +223,15 @@ class Reviews extends Component
 
             $reviews[$productId] = new ModelsReview();
             $reviews[$productId]->productId = $productId;
+            $reviews[$productId]->orderId = $order->id;;
             $reviews[$productId]->userId = $order->customerId;
             $reviews[$productId]->updateCount = 0;
             $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
         }
         
-        $db = Craft::$app->getDb();
-        $transaction = $db->beginTransaction();
-
-
-        try {
-            foreach($reviews as $review) {
-                $this->saveReview($review, false);
-            }
-            $reviewdOrder = new ReviewedOrder();
-            $reviewdOrder->orderId = $order->id;
-            $reviewdOrder->save(false);
-            $transaction->commit();
-        } catch (\Exception $e) {
-            $transaction->rollBack();
-            throw $e;
-        }
-
+        foreach($reviews as $review) {
+            $this->saveReview($review, false);
+        } 
     }
 
     private function _buildQuery(): Query

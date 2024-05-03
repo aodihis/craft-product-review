@@ -57,6 +57,7 @@ class Install extends Migration
         $this->createTable(Table::PRODUCT_REVIEW_REVIEWS, [
             'id' => $this->primaryKey(),
             'productId' => $this->integer()->notNull(),
+            'orderId' => $this->integer()->notNull(),
             'userId' => $this->integer()->notNull(),
             'updateCount' => $this->integer()->notNull()->defaultValue(0),
             'rating' => $this->tinyInteger(2),
@@ -71,15 +72,6 @@ class Install extends Migration
             'id' => $this->primaryKey(),
             'reviewId' => $this->integer()->notNull(),
             'variantId' => $this->integer()->notNull(),
-            'dateCreated' => $this->dateTime()->notNull(),
-            'dateUpdated' => $this->dateTime()->notNull(),
-            'uid' => $this->uid(),
-        ]);
-
-        $this->archiveTableIfExists(Table::PRODUCT_REVIEWED_ORDERS);
-        $this->createTable(Table::PRODUCT_REVIEWED_ORDERS, [
-            'id' => $this->primaryKey(),
-            'orderId' => $this->integer()->notNull(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),
@@ -112,8 +104,8 @@ class Install extends Migration
     {
         $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'productId', false);
         $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'userId', false);
+        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'orderId', false);
         $this->createIndex(null, Table::PRODUCT_REVIEW_VARIANTS, 'variantId', false);
-        $this->createIndex(null, Table::PRODUCT_REVIEWED_ORDERS, 'orderId', false);
     }
 
     /**
@@ -122,6 +114,7 @@ class Install extends Migration
     public function addForeignKeys(): void
     {
         $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['productId'], CommerceTable::PRODUCTS, ['id'], 'CASCADE'); 
+        $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['orderId'], CommerceTable::ORDERS, ['id'], 'CASCADE'); 
         $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['userId'], DbTable::USERS, ['id'], 'CASCADE');
         $this->addForeignKey(null, Table::PRODUCT_REVIEW_VARIANTS, ['reviewId'], Table::PRODUCT_REVIEW_REVIEWS, ['id'], 'CASCADE');
     }

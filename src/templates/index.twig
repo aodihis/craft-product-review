@@ -5,7 +5,7 @@
 
 {% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
 
-{% block comment %}
+{% block content %}
     <div id="table-data"></div>
 {% endblock %}
 
@@ -13,7 +13,7 @@
 var columns = [
   { name: 'product', title: Craft.t('app', 'Product') },
   { name: 'rating', title: Craft.t('app', 'Rating') },
-  { name: 'comment', title: Craft.t('app', 'comment') },
+  { name: 'comment', title: Craft.t('app', 'Comment') },
   { name: 'reviewer', title: Craft.t('app', 'Reviewer') },
 ];
 

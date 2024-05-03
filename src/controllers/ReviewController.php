@@ -51,11 +51,11 @@ class ReviewController extends Controller
             return $this->asModelFailure(
                 $review,
                 $message,
-                'review'
+                'review',
+                $review->toArray()
             );
         }
 
-    
 
         if (!Plugin::getInstance()->getReviews()->saveReview($review)) {
             $error = Craft::t('product-review', 'Unable to save review.');
@@ -64,7 +64,8 @@ class ReviewController extends Controller
             return $this->asModelFailure(
                 $review,
                 $message,
-                'review'
+                'review',
+                $review->toArray()
             );
         }
 
@@ -72,7 +73,8 @@ class ReviewController extends Controller
         return $this->asModelSuccess(
             $review,
             $message,
-            'review'
+            'review',
+            $review->toArray()
         );
     }
 }

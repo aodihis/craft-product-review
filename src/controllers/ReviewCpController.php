@@ -17,6 +17,11 @@ use craft\helpers\Html;
 class ReviewCpController extends Controller
 {
 
+    public function actionGetUser()
+    {
+
+    }
+
     public function actionGetTableData()
     {
         $this->requireAcceptsJson();
@@ -32,10 +37,10 @@ class ReviewCpController extends Controller
         foreach ($reviews as $review) {
             $rows[] = [
                 'id' => $review->id,
-                'product' => Html::tag('div',Html::a($review->product->title, $review->product->getCpEditUrl)),
+                'product' => Html::tag('div',Html::a($review->product->title, $review->product->getCpEditUrl())),
                 'rating' => $review->rating,
-                'comment' => $review->comment,
-                'reviewer' =>  Html::tag('div',Html::a($review->user->fullName, $review->user->getCpEditUrl))
+                'comment' => $review->comment ?: 'No feedback',
+                'reviewer' =>  Html::tag('div',Html::a($review->user->fullName ?: $review->user->username, $review->user->getCpEditUrl()))
                 ];
         }
         return $this->asJson([
