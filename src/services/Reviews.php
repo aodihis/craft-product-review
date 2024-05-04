@@ -24,15 +24,15 @@ class Reviews extends Component
     /**
      * @returns ModelsReview[]
      */
-    public function getReviews(int $productId = null, int $userId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): array
+    public function getReviews(int $productId = null, int $reviewerId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): array
     {
-        $query = $this->_buildQuery($productId, $userId, $rating, $sort, $limit, $offset);
+        $query = $this->_buildQuery();
         if ($productId) {
             $query->andWhere(['productId' => $productId]);
         }
 
-        if ($userId) {
-            $query->andWhere(['userId' => $userId]);
+        if ($reviewerId) {
+            $query->andWhere(['reviewerId' => $reviewerId]);
         }
         
         if ($rating) {
@@ -71,15 +71,15 @@ class Reviews extends Component
         return $model;
     }
 
-    public function getTotalReviews(int $productId = null, int $userId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): int
+    public function getTotalReviews(int $productId = null, int $reviewerId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): int
     {
-        $query = $this->_buildQuery($productId, $userId, $rating, $sort, $limit, $offset);
+        $query = $this->_buildQuery();
         if ($productId) {
             $query->andWhere(['productId' => $productId]);
         }
 
-        if ($userId) {
-            $query->andWhere(['userId' => $userId]);
+        if ($reviewerId) {
+            $query->andWhere(['reviewerId' => $reviewerId]);
         }
         
         if ($rating) {
@@ -126,7 +126,7 @@ class Reviews extends Component
     public function getItemToReviewForUser(int $userId): array
     {
         $query = $this->_buildQuery();
-        $query->where(['userId' => $userId])->andWhere( ['updateCount' => 0]);
+        $query->where(['reviewerId' => $userId])->andWhere( ['updateCount' => 0]);
         $reviews = $query->all();
         foreach ($reviews as &$review) {
             $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
@@ -161,7 +161,7 @@ class Reviews extends Component
         $fields = [
             'productId',
             'orderId',
-            'userId',
+            'reviewerId',
             'updateCount',
             'rating',
             'comment',
@@ -183,10 +183,10 @@ class Reviews extends Component
 
             if ($isNew) {
                 foreach($model->variantIds as $variantId) {
-                    $reviewLineItem = new ReviewVariant();
-                    $reviewLineItem->reviewId = $model->id;
-                    $reviewLineItem->variantId = $variantId;
-                    $reviewLineItem->save(false);
+                    $reviewVariant = new ReviewVariant();
+                    $reviewVariant->reviewId = $model->id;
+                    $reviewVariant->variantId = $variantId;
+                    $reviewVariant->save(false);
                 }
             }
             $transaction->commit();
@@ -224,7 +224,7 @@ class Reviews extends Component
             $reviews[$productId] = new ModelsReview();
             $reviews[$productId]->productId = $productId;
             $reviews[$productId]->orderId = $order->id;;
-            $reviews[$productId]->userId = $order->customerId;
+            $reviews[$productId]->reviewerId = $order->customerId;
             $reviews[$productId]->updateCount = 0;
             $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
         }

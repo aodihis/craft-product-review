@@ -17,6 +17,39 @@ use craft\helpers\Html;
 class ReviewCpController extends Controller
 {
 
+
+    /**
+     * @return Response
+     * @throws BadRequestHttpException
+     * @since 4.0
+     */
+    public function actionCustomerSearch(): Response
+    {
+        $this->requireAcceptsJson();
+
+        $query = $this->request->getQueryParam('query');
+
+        $limit = 30;
+        $customers = [];
+
+        if ($query === null) {
+            return $this->asJson($customers);
+        }
+
+        $userQuery = User::find()->status(null)->limit($limit);
+
+        if ($query) {
+            $userQuery->search(urldecode($query));
+        }
+
+        $customers = $userQuery->collect()->map(function(User $user) {
+            return $this->_customerToArray($user);
+        });
+
+        return $this->asSuccess(data: compact('customers'));
+    }
+
+    
     public function actionGetUser()
     {
 

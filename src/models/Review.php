@@ -23,7 +23,7 @@ class Review extends Model
     public ?array $variantIds      = [];
 
     public int $updateCount         = 0;
-    public ?int $userId             = null;
+    public ?int $reviewerId             = null;
     public ?int $rating             = null;
     public ?string $comment         = null;
     public ?DateTIme $dateCreated   = null;
@@ -32,7 +32,7 @@ class Review extends Model
 
 
     private ?Product $_product = null;
-    private ?User $_user = null;
+    private ?User $_reviewer = null;
 
     /** @var Purchasable[]|Variant[] */
     private array $_variants = [];
@@ -64,15 +64,15 @@ class Review extends Model
         
     }
 
-    public function getUser(): ?User
+    public function getReviewer(): ?User
     {
-        if ($this->_user) {
-            return $this->_user;
+        if ($this->_reviewer) {
+            return $this->_reviewer;
         }
 
-        if ($this->userId) {
-            $this->_user = User::find()->id($this->userId)->one();
-            return $this->_user;
+        if ($this->reviewerId) {
+            $this->_reviewer = User::find()->id($this->reviewerId)->one();
+            return $this->_reviewer;
         } 
         return null;
     }
@@ -134,8 +134,8 @@ class Review extends Model
     {
         $maxRating = Plugin::getInstance()->getSettings()->maxRating;
         $rules = parent::defineRules();
-        $rules[] = [['id', 'productId', 'orderId','userId', 'rating', 'updateCount'], 'safe'];
-        $rules[] = [['productId', 'orderId', 'variantIds', 'userId'], 'required'];
+        $rules[] = [['id', 'productId', 'orderId','reviewerId', 'rating', 'updateCount'], 'safe'];
+        $rules[] = [['productId', 'orderId', 'variantIds', 'reviewerId'], 'required'];
         $rules[] = ['rating', 'integer', 'min' => 1, 'max' => $maxRating, 'when' => function($model) {
             return $model->updateCount > 0;
         }];
