@@ -33,7 +33,7 @@ class ReviewController extends Controller
             throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: {$id}"));
         }
 
-        if ($review->userId !== $currentUser->getId()) {
+        if ($review->reviewerId !== $currentUser->getId()) {
             $review->addError("User are not permitted to update this review.");
         }
 

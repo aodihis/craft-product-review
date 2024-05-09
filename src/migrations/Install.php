@@ -58,7 +58,7 @@ class Install extends Migration
             'id' => $this->primaryKey(),
             'productId' => $this->integer()->notNull(),
             'orderId' => $this->integer()->notNull(),
-            'userId' => $this->integer()->notNull(),
+            'reviewerId' => $this->integer()->notNull(),
             'updateCount' => $this->integer()->notNull()->defaultValue(0),
             'rating' => $this->tinyInteger(2),
             'comment' => $this->text(),
@@ -103,7 +103,7 @@ class Install extends Migration
     public function createIndexes(): void
     {
         $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'productId', false);
-        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'userId', false);
+        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'reviewerId', false);
         $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'orderId', false);
         $this->createIndex(null, Table::PRODUCT_REVIEW_VARIANTS, 'variantId', false);
     }
@@ -115,7 +115,7 @@ class Install extends Migration
     {
         $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['productId'], CommerceTable::PRODUCTS, ['id'], 'CASCADE'); 
         $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['orderId'], CommerceTable::ORDERS, ['id'], 'CASCADE'); 
-        $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['userId'], DbTable::USERS, ['id'], 'CASCADE');
+        $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['reviewerId'], DbTable::USERS, ['id'], 'CASCADE');
         $this->addForeignKey(null, Table::PRODUCT_REVIEW_VARIANTS, ['reviewId'], Table::PRODUCT_REVIEW_REVIEWS, ['id'], 'CASCADE');
     }
 

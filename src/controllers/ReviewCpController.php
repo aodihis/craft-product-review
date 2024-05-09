@@ -2,12 +2,11 @@
 
 namespace aodihis\productreview\controllers;
 
-use aodihis\productreview\models\Review;
+
 use aodihis\productreview\Plugin;
-use aodihis\productreview\web\assets\reviewtable\ReviewTableAsset;
 use Craft;
-use craft\commerce\elements\Order;
-use craft\commerce\elements\Variant;
+use craft\commerce\elements\Product;
+use craft\elements\User;
 use craft\web\Controller;
 use craft\web\Response;
 use yii\web\NotFoundHttpException;
@@ -17,43 +16,60 @@ use craft\helpers\Html;
 class ReviewCpController extends Controller
 {
 
-
-    /**
-     * @return Response
-     * @throws BadRequestHttpException
-     * @since 4.0
-     */
-    public function actionCustomerSearch(): Response
+    public function actionUserSearch(): Response
     {
         $this->requireAcceptsJson();
 
         $query = $this->request->getQueryParam('query');
 
         $limit = 30;
-        $customers = [];
+        $users = [];
 
         if ($query === null) {
-            return $this->asJson($customers);
+            return $this->asJson($users);
         }
 
-        $userQuery = User::find()->status(null)->limit($limit);
+        $userQuery = User::find()->limit($limit);
 
         if ($query) {
             $userQuery->search(urldecode($query));
         }
 
-        $customers = $userQuery->collect()->map(function(User $user) {
-            return $this->_customerToArray($user);
+        $items = $userQuery->collect()->map(function(User $user) {
+            return $user->toArray();
         });
 
-        return $this->asSuccess(data: compact('customers'));
+
+        return $this->asJson(data: compact('items'));
     }
 
-    
-    public function actionGetUser()
+    public function actionProductSearch(): Response
     {
+        $this->requireAcceptsJson();
 
+        $query = $this->request->getQueryParam('query');
+
+        $limit = 30;
+        $users = [];
+
+        if ($query === null) {
+            return $this->asJson($users);
+        }
+
+        $productQuery = Product::find()->limit($limit);
+
+        if ($query) {
+            $productQuery->search(urldecode($query));
+        }
+
+        $items = $productQuery->collect()->map(function(Product $product) {
+            return $product->toArray();
+        });
+
+
+        return $this->asJson(data: compact('items'));
     }
+
 
     public function actionGetTableData()
     {
@@ -73,7 +89,7 @@ class ReviewCpController extends Controller
                 'product' => Html::tag('div',Html::a($review->product->title, $review->product->getCpEditUrl())),
                 'rating' => $review->rating,
                 'comment' => $review->comment ?: 'No feedback',
-                'reviewer' =>  Html::tag('div',Html::a($review->user->fullName ?: $review->user->username, $review->user->getCpEditUrl()))
+                'reviewer' =>  Html::tag('div',Html::a($review->reviewer->fullName ?: $review->reviewer->username, $review->reviewer->getCpEditUrl()))
                 ];
         }
         return $this->asJson([
