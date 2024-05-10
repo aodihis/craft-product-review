@@ -1,52 +1,50 @@
 {% extends "_layouts/cp" %}
 {% set title = "Commerce Reviews" %}
-{# 
-{% do view.registerAssetBundle('aodihis\\productreview\\web\\assets\\reviewtable\\ReviewTableAsset') -%} #}
 
 {% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
 
 {% css %}
-  .filter-container {
-    position: relative;
-    display: inline-block;
-  }
-  
-  .dropdown-input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
+.filter-container {
+  position: relative;
+  display: inline-block;
+}
 
-  .reviewer-input {
-    max-width: 500px;
-  }
-  
-  .dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    border: 1px solid #ccc;
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-    background-color: #fff;
-  }
-  
-  .dropdown-item {
-    padding: 10px;
-    cursor: pointer;
-  }
-  
-  .dropdown-item:hover {
-    background-color: #f0f0f0;
-  }
+.dropdown-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
 
-  .filter-label {
-    margin-bottom: 0.4rem;
-    font-weight: bold;
-  }
+.reviewer-input {
+  max-width: 500px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  background-color: #fff;
+}
+
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+.filter-label {
+  margin-bottom: 0.4rem;
+  font-weight: bold;
+}
 
 /* Width */
 
@@ -157,15 +155,13 @@
       <div class="filter-label"> <label for="rating-filter" class="">Filter by Rating:</label></div>
       <select name="rating-filter" id="rating-filter"  class="select-dropdown">
         <option value="">All</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
+        {% for i in 1.. maxRating %}
+          <option value="{{i}}">{{i}}</option>
+        {% endfor %}
       </select>
     </div>
 
-    <div class="filter-container w-1/10"> <button type="submit" class="btn submit filter-btn">Filter</button></div>
+    <div class="filter-container w-1/10"> <button id="apply-filter" type="submit" class="btn submit filter-btn">Filter</button></div>
 </div>
     <div id="table-data"></div>
 {% endblock %}
@@ -174,12 +170,34 @@
 
 var selectedProductId = null;
 var selectedReviewerId = null;
+var selectedRating = null;
 
 var columns = [
-  { name: 'product', title: Craft.t('app', 'Product') },
-  { name: 'rating', title: Craft.t('app', 'Rating') },
+  { name: 'product', title: Craft.t('app', 'Product'), callback: function(product) {
+      if (product) {
+        return `<a href="${product.cpEditUrl}">${product.title}</a>`;
+      }
+      return '';
+  } },
+  { name: 'rating', title: Craft.t('app', 'Rating'), callback: function (rating) {
+      return '<span style="font-size:200%;color:#ffe234;">&starf;</span>'.repeat(rating);
+
+  } },
   { name: 'comment', title: Craft.t('app', 'Comment') },
-  { name: 'reviewer', title: Craft.t('app', 'Reviewer') },
+  { name: 'reviewer', title: Craft.t('app', 'Reviewer'), callback: function(reviewer) {
+      if (reviewer) {
+        return `<a href="${reviewer.cpEditUrl}">${reviewer.name}</a>`;
+      }
+      return '';
+  } },
+  { name: 'url', title: '',
+      callback: function(url) {
+          if (url) {
+            return `<a href="${url}" class="view-btn btn" aria-label="View">View</a>`;
+          }
+          return '';
+      }
+  }
 ];
 
 const adminTable = new Craft.VueAdminTable({
@@ -187,7 +205,15 @@ const adminTable = new Craft.VueAdminTable({
     padded: true,
     columns: columns,
     tableDataEndpoint: 'product-review/review-cp/get-table-data',
+    onQueryParams: function(params) {
+        params.productId = selectedProductId;
+        params.reviewerId = selectedReviewerId;
+        params.rating = selectedRating;
+
+        return params;
+    },
 });
+
 
 function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, type) {
   menuSelector.innerHTML = "";
@@ -251,8 +277,20 @@ document.addEventListener("DOMContentLoaded", function() {
   const productMenu   = document.querySelector("#product-menu");
   const productClear  = document.querySelector("#product-filter-clear");
 
+  const ratingInput   = document.querySelector("#rating-filter");
+
+  const applyBtn     = document.querySelector("#apply-filter");
+
+  applyBtn.addEventListener("click", function() {
+    selectedRating = ratingInput.value;
+    adminTable.reload();
+  });
+
   reviwerInput.addEventListener("input", function() {
     const searchTerm = this.value.trim().toLowerCase();
+    if (searchTerm.length < 2) {
+      return;
+    }
     const url = `{{actionUrl('product-review/review-cp/user-search')}}`
     // Fetch data from API and update dropdown menu
     fetchData(url, searchTerm)
@@ -266,6 +304,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   productInput.addEventListener("input", function() {
     const searchTerm = this.value.trim().toLowerCase();
+    if (searchTerm.length < 2) {
+      return;
+    }
     const url = `{{actionUrl('product-review/review-cp/product-search')}}`
     // Fetch data from API and update dropdown menu
     fetchData(url, searchTerm)

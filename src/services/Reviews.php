@@ -67,7 +67,7 @@ class Reviews extends Component
         }
         $model = new ModelsReview();
         $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
-        $model = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $record]]);
+        $model = Craft::createObject( ['class' => ModelsReview::class, 'attributes' => $record]);
         return $model;
     }
 

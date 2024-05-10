@@ -16,6 +16,17 @@ use craft\helpers\Html;
 class ReviewCpController extends Controller
 {
 
+    public function actionIndex() : Response 
+    {
+        $maxRating = Plugin::getInstance()->getSettings()->getMaxRating();
+        return $this->renderTemplate('product-review/index', compact('maxRating'));
+    }
+
+    public function actionView(int $id): Response
+    {
+        $review = Plugin::getInstance()->getReviews()->getReviewById($id);
+        return $this->renderTemplate('product-review/_view', compact('review'));
+    }
     public function actionUserSearch(): Response
     {
         $this->requireAcceptsJson();
@@ -78,18 +89,27 @@ class ReviewCpController extends Controller
         $limit = 10;
         $currentPage = $this->request->getParam('page', 1);
         
-
-        $reviews = Plugin::getInstance()->getReviews()->getReviews();
-        $total = Plugin::getInstance()->getReviews()->getTotalReviews();
+        $filterProductId = (int)$this->request->getParam('productId')?: null;
+        $filterReviewerId = (int)$this->request->getParam('reviewerId') ?: null;
+        $filterRating   = $this->request->getParam('rating')?: null;
+        $reviews = Plugin::getInstance()->getReviews()->getReviews($filterProductId, $filterReviewerId, $filterRating);
+        $total = Plugin::getInstance()->getReviews()->getTotalReviews($filterProductId, $filterReviewerId, $filterRating);
 
         $rows = [];
         foreach ($reviews as $review) {
             $rows[] = [
                 'id' => $review->id,
-                'product' => Html::tag('div',Html::a($review->product->title, $review->product->getCpEditUrl())),
+                'product' => [
+                    'title' => $review->product->title,
+                    'cpEditUrl' => $review->product->getCpEditUrl(),
+                    ],
                 'rating' => $review->rating,
                 'comment' => $review->comment ?: 'No feedback',
-                'reviewer' =>  Html::tag('div',Html::a($review->reviewer->fullName ?: $review->reviewer->username, $review->reviewer->getCpEditUrl()))
+                'reviewer' =>  [
+                    'name' => $review->reviewer->fullName ?: $review->reviewer->username,
+                    'cpEditUrl' => $review->reviewer->getCpEditUrl(),
+                ],
+                'url' => $review->getViewUrl(),   
                 ];
         }
         return $this->asJson([

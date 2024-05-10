@@ -21,6 +21,8 @@ use craft\commerce\elements\Order;
 use craft\events\RegisterCpNavItemsEvent;
 use craft\web\twig\variables\Cp;
 use craft\web\twig\variables\CraftVariable;
+use craft\web\UrlManager;
+use craft\events\RegisterUrlRulesEvent;
 
 /**
  * Commerce Review plugin
@@ -37,16 +39,6 @@ class Plugin extends BasePlugin
     public string $schemaVersion = '1.0.0';
     public bool $hasCpSettings = true;
     public bool $hasCpSection = true;
-
-
-    public static function config(): array
-    {
-        return [
-            'components' => [
-                // Define component configs here...
-            ],
-        ];
-    }
 
     public function init(): void
     {
@@ -77,6 +69,22 @@ class Plugin extends BasePlugin
         $this->registerUserBehavior();
         $this->registerOnOrderStatusChange();
         $this->registerTwigVariable();
+        $this->registerCpRules();
+    }
+
+    public function registerCpRules() : void 
+    {
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            function(RegisterUrlRulesEvent $event) {
+                $event->rules['product-review'] = 'product-review/review-cp/index';
+                $event->rules['product-review/index'] = 'product-review/review-cp/index';
+                $event->rules['product-review/review/<id:\d+>'] = 'product-review/review-cp/view';
+        
+                // ...
+            }
+        );    
     }
 
     private function registerUserBehavior(): void

@@ -11,6 +11,7 @@ use craft\commerce\elements\Variant;
 use craft\commerce\models\LineItem;
 use craft\commerce\Plugin as Commerce;
 use craft\elements\User;
+use craft\helpers\UrlHelper;
 use craft\validators\UniqueValidator;
 use DateTime;
 
@@ -129,12 +130,16 @@ class Review extends Model
     }
 
 
+    public function getViewUrl(): string
+    {
+        return UrlHelper::cpUrl("product-review/review/{$this->id}");
+    }
 
     protected function defineRules(): array
     {
         $maxRating = Plugin::getInstance()->getSettings()->maxRating;
         $rules = parent::defineRules();
-        $rules[] = [['id', 'productId', 'orderId','reviewerId', 'rating', 'updateCount'], 'safe'];
+        $rules[] = [['id', 'productId', 'orderId','reviewerId', 'rating', 'updateCount', 'dateCreated', 'dateUpdated'], 'safe'];
         $rules[] = [['productId', 'orderId', 'variantIds', 'reviewerId'], 'required'];
         $rules[] = ['rating', 'integer', 'min' => 1, 'max' => $maxRating, 'when' => function($model) {
             return $model->updateCount > 0;

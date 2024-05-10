@@ -17,9 +17,6 @@ use yii\db\ActiveQueryInterface;
  * @property int $updateCount Update Count
  * @property int $rating Rating
  * @property string $comment Comment
- * @property DateTime $dateCreated
- * @property DateTime $dateUpdated
- * @property string $uid
  * 
  */
 class Review extends ActiveRecord

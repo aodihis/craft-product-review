@@ -1,0 +1,54 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+{% set title = "Review ##{review.id}"  %}
+
+
+{% block details %}
+<dl class="meta read-only"><div class="data" bis_skin_checked="1"><dt class="heading">ID</dt>
+    <dd class="value">{{review.id}}</dd>
+    </div>
+    <div class="data" bis_skin_checked="1"><dt class="heading">Reviewer</dt>
+    <dd class="value"><a href={{ review.reviewer.cpEditUrl }}>{{review.reviewer.fullname ? review.reviewer.fullname : review.reviewer.username}}</a></dd>
+    </div>
+    <div class="data" bis_skin_checked="1"><dt class="heading">Product</dt>
+    <dd class="value"><a href={{ review.product.cpEditUrl }}>{{review.product.title }}</a></dd>
+    </div>
+    <div class="data" bis_skin_checked="1"><dt class="heading">Variants</dt>
+    <dd class="value">
+        <ul>
+        {% for variant in review.variants %}
+            <li><a href={{ variant.cpEditUrl }}>{{variant.title }}</a></li>
+        {% endfor %}
+        </ul>
+    </dd>
+    </div>
+
+    <div class="data" bis_skin_checked="1"><dt class="heading">Created at</dt>
+    <dd class="value">{{review.dateCreated|datetime}}</dd>
+    </div>
+    <div class="data" bis_skin_checked="1"><dt class="heading">Updated at</dt>
+        <dd class="value">{{review.dateUpdated|datetime}}</dd>
+    </div></dl>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="field" data-attribute="comment" bis_skin_checked="1">
+    <div class="heading" bis_skin_checked="1">
+        <label>Rating</label>
+    </div>
+    {% for i in 1..review.rating %}
+        <span style="font-size:200%;color:#ffe234;">&starf;</span>
+    {% endfor %} 
+</div>
+
+{{ forms.textAreaField({
+    label: "Comment"|t('product-review'),
+    id: 'comment',
+    name: 'comment',
+    readonly: true,
+    value: review.comment ? review.comment : 'No Feedback'|t('product-review') ,
+}) }}
+
+{% endblock content %}
