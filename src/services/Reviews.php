@@ -106,10 +106,21 @@ class Reviews extends Component
         return $this->getReviews($productId, null, $rating, $sort);
     }
 
-    public function getProductReviewCount(): array
+    public function getProductAverageRating(int $productId): float
     {
+        $reviewAverage = (new Query())
+            ->select([
+                'AVG(rating) as averateRating',
+            ])
+            ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
+            ->where(['productId' => $productId])
+            ->groupBy(['reviews.productId'])->one();
+        
+        if (!$reviewAverage) {
+            return 0;
+        }
 
-        return [];
+        return  number_format((float)$reviewAverage['averateRating'], 2, '.', ''); 
     }
 
      /**

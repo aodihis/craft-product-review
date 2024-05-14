@@ -24,9 +24,11 @@ class ReviewCpController extends Controller
 
     public function actionView(int $id): Response
     {
+
         $review = Plugin::getInstance()->getReviews()->getReviewById($id);
         return $this->renderTemplate('product-review/_view', compact('review'));
     }
+    
     public function actionUserSearch(): Response
     {
         $this->requireAcceptsJson();

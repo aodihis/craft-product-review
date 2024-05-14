@@ -43,8 +43,13 @@ class ReviewController extends Controller
         $review->updateCount +=1;
         $review->rating     = $rating;
         $review->comment    = $comment;
-        
-        if (!$review->validate()) {
+        $review->validate();
+
+
+          
+
+
+        if ($review->hasErrors()) {
             $error = Craft::t('product-review', 'Unable to save review.');
             $message = $this->request->getValidatedBodyParam('failMessage') ?? $error;
 
