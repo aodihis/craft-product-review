@@ -2,7 +2,6 @@
 
 namespace aodihis\productreview\models;
 
-use Craft;
 use craft\base\Model;
 
 /**

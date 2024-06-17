@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace aodihis\productreview\records;
 
@@ -8,14 +8,14 @@ use craft\db\ActiveRecord;
 use yii\db\ActiveQueryInterface;
 
 /**
- * 
+ *
  * @property int $id ID
  * @property int $reviewId Review ID
  * @property int $variantId Variant ID
  * @property DateTime $dateCreated
  * @property DateTime $dateUpdated
  * @property string $uid
- * 
+ *
  */
 class ReviewVariant extends ActiveRecord
 {

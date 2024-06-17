@@ -1,15 +1,15 @@
-<?php 
+<?php
 
 namespace aodihis\productreview\records;
 
 use aodihis\productreview\db\Table;
 use craft\commerce\records\Product;
-use craft\records\User;
 use craft\db\ActiveRecord;
+use craft\records\User;
 use yii\db\ActiveQueryInterface;
 
 /**
- * 
+ *
  * @property int $id ID
  * @property int $productId Product ID
  * @property int $orderId Order ID
@@ -17,7 +17,7 @@ use yii\db\ActiveQueryInterface;
  * @property int $updateCount Update Count
  * @property int $rating Rating
  * @property string $comment Comment
- * 
+ *
  */
 class Review extends ActiveRecord
 {

@@ -5,14 +5,11 @@
 namespace aodihis\productreview\migrations;
 
 use aodihis\productreview\db\Table;
-use aodihis\productreview\records\Review;
 use Craft;
 use craft\commerce\db\Table as CommerceTable;
-use craft\commerce\elements\Order;
 use craft\db\Migration;
 use craft\db\Table as DbTable;
 use craft\helpers\Db;
-use craft\helpers\MigrationHelper;
 use ReflectionClass;
 use yii\base\NotSupportedException;
 
@@ -52,7 +49,7 @@ class Install extends Migration
      */
     public function createTables(): void
     {
-        
+
         $this->archiveTableIfExists(Table::PRODUCT_REVIEW_REVIEWS);
         $this->createTable(Table::PRODUCT_REVIEW_REVIEWS, [
             'id' => $this->primaryKey(),
@@ -113,8 +110,8 @@ class Install extends Migration
      */
     public function addForeignKeys(): void
     {
-        $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['productId'], CommerceTable::PRODUCTS, ['id'], 'CASCADE'); 
-        $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['orderId'], CommerceTable::ORDERS, ['id'], 'CASCADE'); 
+        $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['productId'], CommerceTable::PRODUCTS, ['id'], 'CASCADE');
+        $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['orderId'], CommerceTable::ORDERS, ['id'], 'CASCADE');
         $this->addForeignKey(null, Table::PRODUCT_REVIEW_REVIEWS, ['reviewerId'], DbTable::USERS, ['id'], 'CASCADE');
         $this->addForeignKey(null, Table::PRODUCT_REVIEW_VARIANTS, ['reviewId'], Table::PRODUCT_REVIEW_REVIEWS, ['id'], 'CASCADE');
     }

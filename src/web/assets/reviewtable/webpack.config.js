@@ -3,10 +3,10 @@
 const {getConfig} = require('@craftcms/webpack');
 
 module.exports = getConfig({
-  context: __dirname,
-  config: {
-    entry: {
-      reviewtable: './js/app.js',
+    context: __dirname,
+    config: {
+        entry: {
+            reviewtable: './js/app.js',
+        },
     },
-  },
 });

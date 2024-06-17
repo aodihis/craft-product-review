@@ -1,14 +1,10 @@
-<?php 
+<?php
 
 namespace aodihis\productreview\controllers;
 
-use aodihis\productreview\models\Review;
 use aodihis\productreview\Plugin;
 use Craft;
-use craft\commerce\elements\Order;
-use craft\commerce\elements\Variant;
 use craft\web\Controller;
-use craft\web\Response;
 use yii\web\NotFoundHttpException;
 
 class ReviewController extends Controller
@@ -23,13 +19,13 @@ class ReviewController extends Controller
         $errors = [];
         $currentUser = Craft::$app->getUser()->getIdentity();
 
-        $id    = (int)$this->request->getRequiredBodyParam('id');
+        $id = (int)$this->request->getRequiredBodyParam('id');
         $rating = (int)$this->request->getBodyParam('rating');
         $comment = (string)$this->request->getBodyParam('comment');
-        
+
         $review = Plugin::getInstance()->getReviews()->getReviewById($id);
 
-        if(!$review){
+        if (!$review) {
             throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: {$id}"));
         }
 
@@ -40,13 +36,10 @@ class ReviewController extends Controller
         if (!$review->getIsEditable()) {
             $review->addError(Craft::t('product-review', "The item are expired to reviewd."));
         }
-        $review->updateCount +=1;
-        $review->rating     = $rating;
-        $review->comment    = $comment;
+        $review->updateCount += 1;
+        $review->rating = $rating;
+        $review->comment = $comment;
         $review->validate();
-
-
-          
 
 
         if ($review->hasErrors()) {

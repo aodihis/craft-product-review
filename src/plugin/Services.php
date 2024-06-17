@@ -1,4 +1,5 @@
 <?php
+
 namespace aodihis\productreview\plugin;
 
 use aodihis\productreview\services\Reviews;
@@ -6,7 +7,8 @@ use aodihis\productreview\services\Reviews;
 /**
  * @property Reviews $reviews
  */
-trait Services {
+trait Services
+{
 
     public function getReviews(): Reviews
     {

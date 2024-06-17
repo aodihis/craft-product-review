@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace aodihis\productreview\behaviors;
 
@@ -19,5 +19,5 @@ class UserBehavior extends Behavior
         $user = $this->owner;
         return Plugin::getInstance()->getReviews()->getItemToReviewForUser($user->id);
     }
-    
+
 }

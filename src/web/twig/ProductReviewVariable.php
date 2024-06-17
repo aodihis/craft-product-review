@@ -8,7 +8,7 @@ use aodihis\productreview\Plugin;
 class ProductReviewVariable
 {
     public function getReviewById(int $id): ?Review
-    {  
+    {
         return Plugin::getInstance()->getReviews()->getReviewById($id);
 
     }

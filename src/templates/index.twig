@@ -4,335 +4,345 @@
 {% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
 
 {% css %}
-.filter-container {
-  position: relative;
-  display: inline-block;
-}
+    .filter-container {
+    position: relative;
+    display: inline-block;
+    }
 
-.dropdown-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
+    .dropdown-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    }
 
-.reviewer-input {
-  max-width: 500px;
-}
+    .reviewer-input {
+    max-width: 500px;
+    }
 
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
-  border: 1px solid #ccc;
-  border-top: none;
-  border-radius: 0 0 5px 5px;
-  background-color: #fff;
-}
+    .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    background-color: #fff;
+    }
 
-.dropdown-item {
-  padding: 10px;
-  cursor: pointer;
-}
+    .dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+    }
 
-.dropdown-item:hover {
-  background-color: #f0f0f0;
-}
+    .dropdown-item:hover {
+    background-color: #f0f0f0;
+    }
 
-.filter-label {
-  margin-bottom: 0.4rem;
-  font-weight: bold;
-}
+    .filter-label {
+    margin-bottom: 0.4rem;
+    font-weight: bold;
+    }
 
-/* Width */
+    /* Width */
 
-.w-1\/10 {
-  width: 10%;
-}
+    .w-1\/10 {
+    width: 10%;
+    }
 
-.w-1\/2 {
-  width: 50%;
-}
+    .w-1\/2 {
+    width: 50%;
+    }
 
-.w-1\/3 {
-  width: 33.3333%;
-}
+    .w-1\/3 {
+    width: 33.3333%;
+    }
 
-.w-2\/3 {
-  width: 66.6666%;
-}
+    .w-2\/3 {
+    width: 66.6666%;
+    }
 
-.w-1\/4 {
-  width: 25%;
-}
+    .w-1\/4 {
+    width: 25%;
+    }
 
-.w-3\/4 {
-  width: 75%;
-}
+    .w-3\/4 {
+    width: 75%;
+    }
 
-.w-1\/5 {
-  width: 20%;
-}
+    .w-1\/5 {
+    width: 20%;
+    }
 
-.w-2\/5 {
-  width: 40%;
-}
+    .w-2\/5 {
+    width: 40%;
+    }
 
-.w-3\/5 {
-  width: 60%;
-}
+    .w-3\/5 {
+    width: 60%;
+    }
 
-.w-4\/5 {
-  width: 80%;
-}
+    .w-4\/5 {
+    width: 80%;
+    }
 
-.w-3\/10 {
-  width: 30%;
-}
+    .w-3\/10 {
+    width: 30%;
+    }
 
-.w-7\/10 {
-  width: 70%;
-}
+    .w-7\/10 {
+    width: 70%;
+    }
 
-.w-full {
-  width: 100%;
-}
+    .w-full {
+    width: 100%;
+    }
 
-.filter-container .clear-btn {
-  position: absolute;
-  cursor: pointer;
-  top: 70%;
-  right: 5px;
-  transform: translateY(-50%);
-}
+    .filter-container .clear-btn {
+    position: absolute;
+    cursor: pointer;
+    top: 70%;
+    right: 5px;
+    transform: translateY(-50%);
+    }
 
-.select-dropdown {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #fff;
-  appearance: none;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
-  background-repeat: no-repeat;
-  background-position-x: 100%;
-  background-position-y: 50%;
-}
-  
-.select-dropdown:focus {
-  outline: none;
-}
+    .select-dropdown {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,
+    <svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
+        <path d='M7 10l5 5 5-5z'/>
+        <path d='M0 0h24v24H0z' fill='none'/>
+    </svg>");
+    background-repeat: no-repeat;
+    background-position-x: 100%;
+    background-position-y: 50%;
+    }
 
-.filter-btn {
-  margin-top: 20%;
-}
+    .select-dropdown:focus {
+    outline: none;
+    }
 
-.filter-group-container {
-  margin-bottom: 40px;
-}
+    .filter-btn {
+    margin-top: 20%;
+    }
+
+    .filter-group-container {
+    margin-bottom: 40px;
+    }
 {% endcss %}
 
 {% block content %}
-<div class="flex-nowrap flex filter-group-container">
-    <div class="filter-container w-2/5">
-      <div class="filter-label"> <label for="reviewer-filter" class="">Filter by Reviewer:</label></div>
-      <input type="text" id="reviewer-filter" name="reviewer-filter" class="dropdown-input reviewer-input" placeholder="Search..." autocomplete="off">
-      <button id="reviewer-filter-clear" class="clear-btn" title="Clear search" role="button" aria-label="Clear search" style="display: none;"></button>
-      <div class="dropdown-menu" id="reviewer-menu" style="display: none;"></div>
-    </div>
+    <div class="flex-nowrap flex filter-group-container">
+        <div class="filter-container w-2/5">
+            <div class="filter-label"><label for="reviewer-filter" class="">Filter by Reviewer:</label></div>
+            <input type="text" id="reviewer-filter" name="reviewer-filter" class="dropdown-input reviewer-input"
+                   placeholder="Search..." autocomplete="off">
+            <button id="reviewer-filter-clear" class="clear-btn" title="Clear search" role="button"
+                    aria-label="Clear search" style="display: none;"></button>
+            <div class="dropdown-menu" id="reviewer-menu" style="display: none;"></div>
+        </div>
 
-    <div class="filter-container w-2/5">
-      <div class="filter-label"> <label for="product-filter" class="">Filter by Product:</label></div>
-      <input type="text" id="product-filter" name="product-filter" class="dropdown-input" placeholder="Search..." autocomplete="off">
-      <button id="product-filter-clear" class="clear-btn" title="Clear search" role="button" aria-label="Clear search" style="display: none;"></button>
-      <div class="dropdown-menu" id="product-menu" style="display: none;"></div>
-    </div>
+        <div class="filter-container w-2/5">
+            <div class="filter-label"><label for="product-filter" class="">Filter by Product:</label></div>
+            <input type="text" id="product-filter" name="product-filter" class="dropdown-input" placeholder="Search..."
+                   autocomplete="off">
+            <button id="product-filter-clear" class="clear-btn" title="Clear search" role="button"
+                    aria-label="Clear search" style="display: none;"></button>
+            <div class="dropdown-menu" id="product-menu" style="display: none;"></div>
+        </div>
 
-    <div class="filter-container w-1/10">
-      <div class="filter-label"> <label for="rating-filter" class="">Filter by Rating:</label></div>
-      <select name="rating-filter" id="rating-filter"  class="select-dropdown">
-        <option value="">All</option>
-        {% for i in 1.. maxRating %}
-          <option value="{{i}}">{{i}}</option>
-        {% endfor %}
-      </select>
-    </div>
+        <div class="filter-container w-1/10">
+            <div class="filter-label"><label for="rating-filter" class="">Filter by Rating:</label></div>
+            <select name="rating-filter" id="rating-filter" class="select-dropdown">
+                <option value="">All</option>
+                {% for i in 1.. maxRating %}
+                    <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <div class="filter-container w-1/10"> <button id="apply-filter" type="submit" class="btn submit filter-btn">Filter</button></div>
-</div>
+        <div class="filter-container w-1/10">
+            <button id="apply-filter" type="submit" class="btn submit filter-btn">Filter</button>
+        </div>
+    </div>
     <div id="table-data"></div>
 {% endblock %}
 
 {% js %}
 
-var selectedProductId = null;
-var selectedReviewerId = null;
-var selectedRating = null;
+    var selectedProductId = null;
+    var selectedReviewerId = null;
+    var selectedRating = null;
 
-var columns = [
-  { name: 'product', title: Craft.t('app', 'Product'), callback: function(product) {
-      if (product) {
-        return `<a href="${product.cpEditUrl}">${product.title}</a>`;
-      }
-      return '';
-  } },
-  { name: 'rating', title: Craft.t('app', 'Rating'), callback: function (rating) {
-      return '<span style="font-size:200%;color:#ffe234;">&starf;</span>'.repeat(rating);
+    var columns = [
+    { name: 'product', title: Craft.t('app', 'Product'), callback: function(product) {
+    if (product) {
+    return `<a href="${product.cpEditUrl}">${product.title}</a>`;
+    }
+    return '';
+    } },
+    { name: 'rating', title: Craft.t('app', 'Rating'), callback: function (rating) {
+    return '<span style="font-size:200%;color:#ffe234;">&starf;</span>'.repeat(rating);
 
-  } },
-  { name: 'comment', title: Craft.t('app', 'Comment') },
-  { name: 'reviewer', title: Craft.t('app', 'Reviewer'), callback: function(reviewer) {
-      if (reviewer) {
-        return `<a href="${reviewer.cpEditUrl}">${reviewer.name}</a>`;
-      }
-      return '';
-  } },
-  { name: 'url', title: '',
-      callback: function(url) {
-          if (url) {
-            return `<a href="${url}" class="view-btn btn" aria-label="View">View</a>`;
-          }
-          return '';
-      }
-  }
-];
+    } },
+    { name: 'comment', title: Craft.t('app', 'Comment') },
+    { name: 'reviewer', title: Craft.t('app', 'Reviewer'), callback: function(reviewer) {
+    if (reviewer) {
+    return `<a href="${reviewer.cpEditUrl}">${reviewer.name}</a>`;
+    }
+    return '';
+    } },
+    { name: 'url', title: '',
+    callback: function(url) {
+    if (url) {
+    return `<a href="${url}" class="view-btn btn" aria-label="View">View</a>`;
+    }
+    return '';
+    }
+    }
+    ];
 
-const adminTable = new Craft.VueAdminTable({
+    const adminTable = new Craft.VueAdminTable({
     container: '#table-data',
     padded: true,
     columns: columns,
     tableDataEndpoint: 'product-review/review-cp/get-table-data',
     onQueryParams: function(params) {
-        params.productId = selectedProductId;
-        params.reviewerId = selectedReviewerId;
-        params.rating = selectedRating;
+    params.productId = selectedProductId;
+    params.reviewerId = selectedReviewerId;
+    params.rating = selectedRating;
 
-        return params;
+    return params;
     },
-});
+    });
 
 
-function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, type) {
-  menuSelector.innerHTML = "";
-  
-  if (data.length === 0) {
+    function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, type) {
+    menuSelector.innerHTML = "";
+
+    if (data.length === 0) {
     menuSelector.style.display = "none";
     return;
-  }
-  
-  data.forEach(item => {
+    }
+
+    data.forEach(item => {
     const listItem = document.createElement("div");
     listItem.classList.add("dropdown-item");
     if (type == 'reviewer') {
-      listItem.textContent = item.username;
+    listItem.textContent = item.username;
     } else {
-      listItem.textContent = item.title;
+    listItem.textContent = item.title;
     }
-   
+
     listItem.setAttribute("data-id", item.id);
     listItem.addEventListener("click", function() {
-      if (type == 'reviewer') {
-        inputSelector.value = item.username;
-        selectedReviewerId = item.id
-      } else {
-        inputSelector.value = item.title;
-        selectedProductId = item.id
-      }
-      inputSelector.disabled = true;
-      menuSelector.style.display = "none";
-      clearSelector.style.display = "block";
+    if (type == 'reviewer') {
+    inputSelector.value = item.username;
+    selectedReviewerId = item.id
+    } else {
+    inputSelector.value = item.title;
+    selectedProductId = item.id
+    }
+    inputSelector.disabled = true;
+    menuSelector.style.display = "none";
+    clearSelector.style.display = "block";
     });
     menuSelector.appendChild(listItem);
-  });
-  
-  menuSelector.style.display = "block";
-}
+    });
 
-function fetchData(actionUrl, searchTerm) {
+    menuSelector.style.display = "block";
+    }
+
+    function fetchData(actionUrl, searchTerm) {
     const url = `${actionUrl}&query=${searchTerm}`;
     return fetch(url, {
-      headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+    headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
     },
     })
-      .then(response => response.json())
-      .then(data => data.items)
-      .catch(error => {
-        console.error("Error fetching data:", error);
-        return [];
-      });
-  }
+    .then(response => response.json())
+    .then(data => data.items)
+    .catch(error => {
+    console.error("Error fetching data:", error);
+    return [];
+    });
+    }
 
-document.addEventListener("DOMContentLoaded", function() {
-  
-  const reviwerInput  = document.querySelector("#reviewer-filter");
-  const reviewerMenu  = document.querySelector("#reviewer-menu");
-  const reviewerClear = document.querySelector("#reviewer-filter-clear");
+    document.addEventListener("DOMContentLoaded", function() {
 
-  const productInput  = document.querySelector("#product-filter");
-  const productMenu   = document.querySelector("#product-menu");
-  const productClear  = document.querySelector("#product-filter-clear");
+    const reviwerInput  = document.querySelector("#reviewer-filter");
+    const reviewerMenu  = document.querySelector("#reviewer-menu");
+    const reviewerClear = document.querySelector("#reviewer-filter-clear");
 
-  const ratingInput   = document.querySelector("#rating-filter");
+    const productInput  = document.querySelector("#product-filter");
+    const productMenu   = document.querySelector("#product-menu");
+    const productClear  = document.querySelector("#product-filter-clear");
 
-  const applyBtn     = document.querySelector("#apply-filter");
+    const ratingInput   = document.querySelector("#rating-filter");
 
-  applyBtn.addEventListener("click", function() {
+    const applyBtn     = document.querySelector("#apply-filter");
+
+    applyBtn.addEventListener("click", function() {
     selectedRating = ratingInput.value;
     adminTable.reload();
-  });
+    });
 
-  reviwerInput.addEventListener("input", function() {
+    reviwerInput.addEventListener("input", function() {
     const searchTerm = this.value.trim().toLowerCase();
     if (searchTerm.length < 2) {
-      return;
+    return;
     }
-    const url = `{{actionUrl('product-review/review-cp/user-search')}}`
+    const url = `{{ actionUrl('product-review/review-cp/user-search') }}`
     // Fetch data from API and update dropdown menu
     fetchData(url, searchTerm)
-      .then(data => {
-        updateDropdownMenu(data,reviewerMenu, reviwerInput, reviewerClear, 'reviewer' );
-      })
-      .catch(error => {
-        console.error("Error fetching data:", error);
-      });
-  });
+    .then(data => {
+    updateDropdownMenu(data,reviewerMenu, reviwerInput, reviewerClear, 'reviewer' );
+    })
+    .catch(error => {
+    console.error("Error fetching data:", error);
+    });
+    });
 
-  productInput.addEventListener("input", function() {
+    productInput.addEventListener("input", function() {
     const searchTerm = this.value.trim().toLowerCase();
     if (searchTerm.length < 2) {
-      return;
+    return;
     }
-    const url = `{{actionUrl('product-review/review-cp/product-search')}}`
+    const url = `{{ actionUrl('product-review/review-cp/product-search') }}`
     // Fetch data from API and update dropdown menu
     fetchData(url, searchTerm)
-      .then(data => {
-        updateDropdownMenu(data, productMenu, productInput, productClear, 'product' );
-      })
-      .catch(error => {
-        console.error("Error fetching data:", error);
-      });
-  });
+    .then(data => {
+    updateDropdownMenu(data, productMenu, productInput, productClear, 'product' );
+    })
+    .catch(error => {
+    console.error("Error fetching data:", error);
+    });
+    });
 
-  reviewerClear.addEventListener("click", function() {
+    reviewerClear.addEventListener("click", function() {
     reviwerInput.value = '';
     selectedReviewerId = null;
     reviwerInput.disabled = false;
     this.style.display = "none";
-  });
+    });
 
-  productClear.addEventListener("click", function() {
+    productClear.addEventListener("click", function() {
     productInput.value = '';
     selectedProductId = null;
     productInput.disabled = false;
     this.style.display = "none";
-  });
+    });
 
 
-});
+    });
 
 {% endjs %}

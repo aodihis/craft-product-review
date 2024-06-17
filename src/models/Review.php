@@ -1,35 +1,31 @@
 <?php
+
 namespace aodihis\productreview\models;
 
 use aodihis\productreview\Plugin;
-use aodihis\productreview\records\Review as RecordsReview;
 use craft\base\Model;
 use craft\commerce\base\Purchasable;
-use craft\commerce\elements\Order;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
-use craft\commerce\models\LineItem;
-use craft\commerce\Plugin as Commerce;
 use craft\elements\User;
 use craft\helpers\UrlHelper;
-use craft\validators\UniqueValidator;
 use DateTime;
 
 class Review extends Model
 {
-    public ?int $id                 = null;
-    public ?int $productId          = null;
-    public ?int $orderId            = null;
+    public ?int $id = null;
+    public ?int $productId = null;
+    public ?int $orderId = null;
     /** @var int[] */
-    public ?array $variantIds      = [];
+    public ?array $variantIds = [];
 
-    public int $updateCount         = 0;
-    public ?int $reviewerId             = null;
-    public ?int $rating             = null;
-    public ?string $comment         = null;
-    public ?DateTIme $dateCreated   = null;
-    public ?DateTime $dateUpdated   = null;
-    public ?string $uid             = null;
+    public int $updateCount = 0;
+    public ?int $reviewerId = null;
+    public ?int $rating = null;
+    public ?string $comment = null;
+    public ?DateTIme $dateCreated = null;
+    public ?DateTime $dateUpdated = null;
+    public ?string $uid = null;
 
 
     private ?Product $_product = null;
@@ -47,7 +43,7 @@ class Review extends Model
 
         if ($this->productId) {
             $this->_product = Product::find()->id($this->productId)->one();
-            return $this->_product; 
+            return $this->_product;
         }
 
         // if ($this->_variants) {
@@ -62,7 +58,7 @@ class Review extends Model
         // }
 
         return null;
-        
+
     }
 
     public function getReviewer(): ?User
@@ -74,16 +70,17 @@ class Review extends Model
         if ($this->reviewerId) {
             $this->_reviewer = User::find()->id($this->reviewerId)->one();
             return $this->_reviewer;
-        } 
+        }
         return null;
     }
 
     /**
      * @params Variant[] $variants
      */
-    public function setVariants(array $variants) : void {
+    public function setVariants(array $variants): void
+    {
         $this->_variants = $variants;
-        $this->variantIds = array_map(static function($variant) {
+        $this->variantIds = array_map(static function ($variant) {
             return $variant->id;
         }, $variants);
     }
@@ -106,7 +103,7 @@ class Review extends Model
 
         if ($this->variantIds) {
             $this->_variants = Variant::find()->id($this->variantIds)->all();
-            return  $this->_variants;
+            return $this->_variants;
         }
 
         return [];
@@ -118,7 +115,7 @@ class Review extends Model
         $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
         $reviewDateCreated = $this->dateCreated;
 
-        if (($maxDaysToReview !== 0) && ($reviewDateCreated === null || ($reviewDateCreated->modify("+ {$maxDaysToReview} day") > $currentTime))){
+        if (($maxDaysToReview !== 0) && ($reviewDateCreated === null || ($reviewDateCreated->modify("+ {$maxDaysToReview} day") > $currentTime))) {
             return false;
         }
 
@@ -139,9 +136,9 @@ class Review extends Model
     {
         $maxRating = Plugin::getInstance()->getSettings()->maxRating;
         $rules = parent::defineRules();
-        $rules[] = [['id', 'productId', 'orderId','reviewerId', 'rating', 'updateCount', 'dateCreated', 'dateUpdated'], 'safe'];
+        $rules[] = [['id', 'productId', 'orderId', 'reviewerId', 'rating', 'updateCount', 'dateCreated', 'dateUpdated'], 'safe'];
         $rules[] = [['productId', 'orderId', 'variantIds', 'reviewerId'], 'required'];
-        $rules[] = ['rating', 'integer', 'min' => 1, 'max' => $maxRating, 'when' => function($model) {
+        $rules[] = ['rating', 'integer', 'min' => 1, 'max' => $maxRating, 'when' => function ($model) {
             return $model->updateCount > 0;
         }];
         return $rules;

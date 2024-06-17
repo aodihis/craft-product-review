@@ -4,25 +4,21 @@ namespace aodihis\productreview;
 
 use aodihis\productreview\behaviors\ProductBehavior;
 use aodihis\productreview\behaviors\UserBehavior;
-use Craft;
 use aodihis\productreview\models\Settings;
 use aodihis\productreview\plugin\Services;
 use aodihis\productreview\web\twig\ProductReviewVariable;
+use Craft;
 use craft\base\Event;
-use yii\base\Event as YiiEvent;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
-use craft\elements\User;
-use craft\events\DefineBehaviorsEvent;
 use craft\commerce\events\OrderStatusEvent;
 use craft\commerce\services\OrderHistories;
-use craft\commerce\models\OrderHistory;
-use craft\commerce\elements\Order;
-use craft\events\RegisterCpNavItemsEvent;
-use craft\web\twig\variables\Cp;
+use craft\elements\User;
+use craft\events\DefineBehaviorsEvent;
+use craft\events\RegisterUrlRulesEvent;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
-use craft\events\RegisterUrlRulesEvent;
+use yii\base\Event as YiiEvent;
 
 /**
  * Commerce Review plugin
@@ -36,6 +32,7 @@ use craft\events\RegisterUrlRulesEvent;
 class Plugin extends BasePlugin
 {
     use Services;
+
     public string $schemaVersion = '1.0.0';
     public bool $hasCpSettings = true;
     public bool $hasCpSection = true;
@@ -46,7 +43,7 @@ class Plugin extends BasePlugin
         $this->_registerComponents();
 
         // Defer most setup tasks until Craft is fully initialized
-        Craft::$app->onInit(function() {
+        Craft::$app->onInit(function () {
             $this->attachEventHandlers();
         });
     }
@@ -72,19 +69,19 @@ class Plugin extends BasePlugin
         $this->registerCpRules();
     }
 
-    public function registerCpRules() : void 
+    public function registerCpRules(): void
     {
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
-            function(RegisterUrlRulesEvent $event) {
+            function (RegisterUrlRulesEvent $event) {
                 $event->rules['product-review'] = 'product-review/review-cp/index';
                 $event->rules['product-review/index'] = 'product-review/review-cp/index';
                 $event->rules['product-review/review/<id:\d+>'] = 'product-review/review-cp/view';
-        
+
                 // ...
             }
-        );    
+        );
     }
 
     private function registerUserBehavior(): void
@@ -92,24 +89,25 @@ class Plugin extends BasePlugin
         Event::on(
             User::class,
             User::EVENT_DEFINE_BEHAVIORS,
-            function(DefineBehaviorsEvent $event) {
+            function (DefineBehaviorsEvent $event) {
                 $event->behaviors['product-review:user'] = UserBehavior::class;
                 $event->behaviors['product-review:product'] = ProductBehavior::class;
             }
         );
     }
 
-    private function registerOnOrderStatusChange() : void {
+    private function registerOnOrderStatusChange(): void
+    {
 
         Event::on(
             OrderHistories::class,
             OrderHistories::EVENT_ORDER_STATUS_CHANGE,
-            function(OrderStatusEvent $event) {
+            function (OrderStatusEvent $event) {
                 // @var OrderHistory $orderHistory
                 $orderHistory = $event->orderHistory;
                 // @var Order $order
                 $order = $event->order;
-        
+
                 // Let the delivery department know the order’s ready to be delivered
                 // ...
 
@@ -125,10 +123,10 @@ class Plugin extends BasePlugin
         Event::on(
             CraftVariable::class,
             CraftVariable::EVENT_INIT,
-            function(YiiEvent $e) {
+            function (YiiEvent $e) {
                 /** @var CraftVariable $variable */
                 $variable = $e->sender;
-    
+
                 // Attach a service:
                 $variable->set('productReview', ProductReviewVariable::class);
             }

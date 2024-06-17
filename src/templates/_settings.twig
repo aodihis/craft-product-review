@@ -3,11 +3,11 @@
 
 {% import '_includes/forms.twig' as forms %}
 
-{% set orderStatues = []%}
+{% set orderStatues = [] %}
 {% for status in craft.commerce.orderStatuses.allOrderStatuses %}
-  {% set orderStatues = orderStatues|merge([
-    {label: status.name, value: status.handle}
-  ])%}
+    {% set orderStatues = orderStatues|merge([
+        {label: status.name, value: status.handle}
+    ]) %}
 {% endfor %}
 
 {{ forms.selectField({

@@ -4,7 +4,6 @@ namespace aodihis\productreview\services;
 
 use aodihis\productreview\db\Table;
 use aodihis\productreview\models\Review as ModelsReview;
-use aodihis\productreview\Plugin;
 use aodihis\productreview\records\Review;
 use aodihis\productreview\records\ReviewedOrder;
 use aodihis\productreview\records\ReviewVariant;
@@ -12,11 +11,9 @@ use Craft;
 use craft\base\Component;
 use craft\commerce\elements\Order;
 use craft\commerce\elements\Variant;
-use craft\db\ActiveQuery;
+use craft\db\Query;
 use craft\helpers\DateTimeHelper;
 use Exception;
-use DateTime;
-use craft\db\Query;
 
 class Reviews extends Component
 {
@@ -34,13 +31,13 @@ class Reviews extends Component
         if ($reviewerId) {
             $query->andWhere(['reviewerId' => $reviewerId]);
         }
-        
+
         if ($rating) {
             $query->andWhere(['rating' => $rating]);
         } else {
-            $query->andWhere(['not',['rating' => null]]);
+            $query->andWhere(['not', ['rating' => null]]);
         }
-        
+
         if ($limit) {
             $query->limit($limit);
         }
@@ -60,14 +57,14 @@ class Reviews extends Component
     {
         $query = $this->_buildQuery();
         $query->where(['reviews.id' => $id]);
-        $record =  $query->one();
+        $record = $query->one();
 
         if (!$record) {
             return null;
         }
         $model = new ModelsReview();
         $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
-        $model = Craft::createObject( ['class' => ModelsReview::class, 'attributes' => $record]);
+        $model = Craft::createObject(['class' => ModelsReview::class, 'attributes' => $record]);
         return $model;
     }
 
@@ -81,13 +78,13 @@ class Reviews extends Component
         if ($reviewerId) {
             $query->andWhere(['reviewerId' => $reviewerId]);
         }
-        
+
         if ($rating) {
             $query->andWhere(['rating' => $rating]);
         } else {
-            $query->andWhere(['not',['rating' => null]]);
+            $query->andWhere(['not', ['rating' => null]]);
         }
-        
+
         if ($limit) {
             $query->limit($limit);
         }
@@ -115,15 +112,15 @@ class Reviews extends Component
             ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
             ->where(['productId' => $productId])
             ->groupBy(['reviews.productId'])->one();
-        
+
         if (!$reviewAverage) {
             return 0;
         }
 
-        return  number_format((float)$reviewAverage['averateRating'], 2, '.', ''); 
+        return number_format((float)$reviewAverage['averateRating'], 2, '.', '');
     }
 
-     /**
+    /**
      * @returns ModelsReview[]
      */
     public function getReviewHistoryForUser(int $userId, string $sort = 'dateCreated DESC'): array
@@ -137,7 +134,7 @@ class Reviews extends Component
     public function getItemToReviewForUser(int $userId): array
     {
         $query = $this->_buildQuery();
-        $query->where(['reviewerId' => $userId])->andWhere( ['updateCount' => 0]);
+        $query->where(['reviewerId' => $userId])->andWhere(['updateCount' => 0]);
         $reviews = $query->all();
         foreach ($reviews as &$review) {
             $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
@@ -145,7 +142,6 @@ class Reviews extends Component
         }
         return $reviews;
     }
-
 
 
     public function saveReview(ModelsReview $model, $runValidation = true): bool
@@ -193,7 +189,7 @@ class Reviews extends Component
             $model->dateUpdated = DateTimeHelper::toDateTime($record->dateUpdated);
 
             if ($isNew) {
-                foreach($model->variantIds as $variantId) {
+                foreach ($model->variantIds as $variantId) {
                     $reviewVariant = new ReviewVariant();
                     $reviewVariant->reviewId = $model->id;
                     $reviewVariant->variantId = $variantId;
@@ -201,20 +197,21 @@ class Reviews extends Component
                 }
             }
             $transaction->commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $transaction->rollBack();
             throw $e;
         }
 
         return true;
     }
-    
-    public function isOrderAlreadyReviewed(int $orderId) : bool {
+
+    public function isOrderAlreadyReviewed(int $orderId): bool
+    {
         $totalCount = Review::find()->where(['orderId' => $orderId])->count();
         return $totalCount > 0;
     }
 
-    public function createReviewForOrder(Order $order) : void 
+    public function createReviewForOrder(Order $order): void
     {
         if ($this->isOrderAlreadyReviewed($order->id)) {
             return;
@@ -222,7 +219,7 @@ class Reviews extends Component
 
         $reviews = [];
 
-        foreach($order->lineItems as $lineItem) {
+        foreach ($order->lineItems as $lineItem) {
             $productId = $lineItem->purchasable->productId;
             if (!$lineItem->purchasable instanceof Variant) {
                 continue;
@@ -234,15 +231,15 @@ class Reviews extends Component
 
             $reviews[$productId] = new ModelsReview();
             $reviews[$productId]->productId = $productId;
-            $reviews[$productId]->orderId = $order->id;;
+            $reviews[$productId]->orderId = $order->id;
             $reviews[$productId]->reviewerId = $order->customerId;
             $reviews[$productId]->updateCount = 0;
             $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
         }
-        
-        foreach($reviews as $review) {
+
+        foreach ($reviews as $review) {
             $this->saveReview($review, false);
-        } 
+        }
     }
 
     private function _buildQuery(): Query
