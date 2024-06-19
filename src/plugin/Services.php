@@ -3,6 +3,7 @@
 namespace aodihis\productreview\plugin;
 
 use aodihis\productreview\services\Reviews;
+use yii\base\InvalidConfigException;
 
 /**
  * @property Reviews $reviews
@@ -10,6 +11,9 @@ use aodihis\productreview\services\Reviews;
 trait Services
 {
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function getReviews(): Reviews
     {
         return $this->get('reviews');

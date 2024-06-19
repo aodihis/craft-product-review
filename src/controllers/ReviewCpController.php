@@ -8,7 +8,9 @@ use craft\commerce\elements\Product;
 use craft\elements\User;
 use craft\helpers\AdminTable;
 use craft\web\Controller;
-use craft\web\Response;
+use yii\base\InvalidConfigException;
+use yii\web\BadRequestHttpException;
+use yii\web\Response;
 
 class ReviewCpController extends Controller
 {
@@ -26,6 +28,9 @@ class ReviewCpController extends Controller
         return $this->renderTemplate('product-review/_view', compact('review'));
     }
 
+    /**
+     * @throws BadRequestHttpException
+     */
     public function actionUserSearch(): Response
     {
         $this->requireAcceptsJson();
@@ -53,6 +58,9 @@ class ReviewCpController extends Controller
         return $this->asJson(data: compact('items'));
     }
 
+    /**
+     * @throws BadRequestHttpException
+     */
     public function actionProductSearch(): Response
     {
         $this->requireAcceptsJson();
@@ -81,7 +89,11 @@ class ReviewCpController extends Controller
     }
 
 
-    public function actionGetTableData()
+    /**
+     * @throws InvalidConfigException
+     * @throws BadRequestHttpException
+     */
+    public function actionGetTableData(): Response
     {
         $this->requireAcceptsJson();
 

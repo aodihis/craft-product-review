@@ -5,7 +5,6 @@ namespace aodihis\productreview\services;
 use aodihis\productreview\db\Table;
 use aodihis\productreview\models\Review as ModelsReview;
 use aodihis\productreview\records\Review;
-use aodihis\productreview\records\ReviewedOrder;
 use aodihis\productreview\records\ReviewVariant;
 use Craft;
 use craft\base\Component;
@@ -14,12 +13,15 @@ use craft\commerce\elements\Variant;
 use craft\db\Query;
 use craft\helpers\DateTimeHelper;
 use Exception;
+use RuntimeException;
+use yii\base\InvalidConfigException;
 
 class Reviews extends Component
 {
 
     /**
      * @returns ModelsReview[]
+     * @throws InvalidConfigException
      */
     public function getReviews(int $productId = null, int $reviewerId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): array
     {
@@ -42,7 +44,7 @@ class Reviews extends Component
             $query->limit($limit);
         }
 
-        $query->offset(null)->orderBy($sort);
+        $query->offset($offset)->orderBy($sort);
 
         $reviews = $query->all();
         foreach ($reviews as &$review) {
@@ -53,6 +55,9 @@ class Reviews extends Component
         return $reviews;
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function getReviewById(int $id): ?ModelsReview
     {
         $query = $this->_buildQuery();
@@ -62,13 +67,11 @@ class Reviews extends Component
         if (!$record) {
             return null;
         }
-        $model = new ModelsReview();
         $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
-        $model = Craft::createObject(['class' => ModelsReview::class, 'attributes' => $record]);
-        return $model;
+        return Craft::createObject(['class' => ModelsReview::class, 'attributes' => $record]);
     }
 
-    public function getTotalReviews(int $productId = null, int $reviewerId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): int
+    public function getTotalReviews(int $productId = null, int $reviewerId = null, int $rating = null, int $limit = null): int
     {
         $query = $this->_buildQuery();
         if ($productId) {
@@ -88,14 +91,13 @@ class Reviews extends Component
         if ($limit) {
             $query->limit($limit);
         }
-
-        $query->offset(null)->orderBy($sort);
         return $query->count();
     }
 
 
     /**
      * @returns ModelsReview[]
+     * @throws InvalidConfigException
      */
     public function getProductReviews(int $productId, int $rating = null, string $sort = 'dateCreated DESC'): array
     {
@@ -122,6 +124,7 @@ class Reviews extends Component
 
     /**
      * @returns ModelsReview[]
+     * @throws InvalidConfigException
      */
     public function getReviewHistoryForUser(int $userId, string $sort = 'dateCreated DESC'): array
     {
@@ -129,7 +132,8 @@ class Reviews extends Component
     }
 
     /**
-     * @return ModelReview[]
+     * @return ModelsReview[]
+     * @throws InvalidConfigException
      */
     public function getItemToReviewForUser(int $userId): array
     {
@@ -144,6 +148,10 @@ class Reviews extends Component
     }
 
 
+    /**
+     * @throws \yii\db\Exception
+     * @throws Exception
+     */
     public function saveReview(ModelsReview $model, $runValidation = true): bool
     {
         $isNew = !$model->id;
@@ -154,7 +162,7 @@ class Reviews extends Component
             $record = Review::findOne($model->id);
 
             if (!$record) {
-                throw new Exception(Craft::t('product-review', 'No review exists with the ID “{id}”',
+                throw new RuntimeException(Craft::t('product-review', 'No review exists with the ID “{id}”',
                     ['id' => $model->id]));
             }
         }
@@ -196,9 +204,9 @@ class Reviews extends Component
                     $reviewVariant->save(false);
                 }
             }
-            $transaction->commit();
+            $transaction?->commit();
         } catch (Exception $e) {
-            $transaction->rollBack();
+            $transaction?->rollBack();
             throw $e;
         }
 
@@ -211,6 +219,9 @@ class Reviews extends Component
         return $totalCount > 0;
     }
 
+    /**
+     * @throws \yii\db\Exception
+     */
     public function createReviewForOrder(Order $order): void
     {
         if ($this->isOrderAlreadyReviewed($order->id)) {

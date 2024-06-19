@@ -34,6 +34,7 @@ class Install extends Migration
 
     /**
      * @inheritdoc
+     * @throws NotSupportedException
      */
     public function safeDown(): bool
     {
@@ -99,10 +100,10 @@ class Install extends Migration
      */
     public function createIndexes(): void
     {
-        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'productId', false);
-        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'reviewerId', false);
-        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'orderId', false);
-        $this->createIndex(null, Table::PRODUCT_REVIEW_VARIANTS, 'variantId', false);
+        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'productId');
+        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'reviewerId');
+        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'orderId');
+        $this->createIndex(null, Table::PRODUCT_REVIEW_VARIANTS, 'variantId');
     }
 
     /**
@@ -118,6 +119,7 @@ class Install extends Migration
 
     /**
      * Removes the foreign keys.
+     * @throws NotSupportedException
      */
     public function dropForeignKeys(): void
     {
@@ -164,7 +166,6 @@ class Install extends Migration
      */
     private function _getAllTableNames(): array
     {
-        $class = new ReflectionClass(Table::class);
-        return $class->getConstants();
+        return (new ReflectionClass(Table::class))->getConstants();
     }
 }

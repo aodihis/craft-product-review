@@ -29,11 +29,11 @@ class Review extends ActiveRecord
 
     public function getProduct(): ActiveQueryInterface
     {
-        return $this->hasOne(Product::class, ['id' => 'productId']);
+        return self::hasOne(Product::class, ['id' => 'productId']);
     }
 
     public function getReviewer(): ActiveQueryInterface
     {
-        return $this->hasOne(User::class, ['id' => 'reviewerId']);
+        return self::hasOne(User::class, ['id' => 'reviewerId']);
     }
 }

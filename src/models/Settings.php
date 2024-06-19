@@ -6,6 +6,8 @@ use craft\base\Model;
 
 /**
  * Commerce Review settings
+ * @property-read int $maxReviewLimit
+ * @property-read int $maxRating
  */
 class Settings extends Model
 {

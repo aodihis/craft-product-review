@@ -5,18 +5,31 @@ namespace aodihis\productreview\controllers;
 use aodihis\productreview\Plugin;
 use Craft;
 use craft\web\Controller;
+use Throwable;
+use yii\base\InvalidConfigException;
+use yii\db\Exception;
+use yii\web\BadRequestHttpException;
+use yii\web\MethodNotAllowedHttpException;
 use yii\web\NotFoundHttpException;
+use yii\web\Response;
 
 class ReviewController extends Controller
 {
     protected array|bool|int $allowAnonymous = true;
 
-    public function actionSave()
+    /**
+     * @throws InvalidConfigException
+     * @throws MethodNotAllowedHttpException
+     * @throws BadRequestHttpException
+     * @throws Throwable
+     * @throws Exception
+     * @throws NotFoundHttpException
+     */
+    public function actionSave(): ?Response
     {
         $this->requirePostRequest();
         $this->requireLogin();
 
-        $errors = [];
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         $id = (int)$this->request->getRequiredBodyParam('id');
@@ -26,7 +39,7 @@ class ReviewController extends Controller
         $review = Plugin::getInstance()->getReviews()->getReviewById($id);
 
         if (!$review) {
-            throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: {$id}"));
+            throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: $id"));
         }
 
         if ($review->reviewerId !== $currentUser->getId()) {
@@ -34,9 +47,9 @@ class ReviewController extends Controller
         }
 
         if (!$review->getIsEditable()) {
-            $review->addError(Craft::t('product-review', "The item are expired to reviewd."));
+            $review->addError(Craft::t('product-review', "The item are expired to review."));
         }
-        $review->updateCount += 1;
+        ++$review->updateCount;
         $review->rating = $rating;
         $review->comment = $comment;
         $review->validate();

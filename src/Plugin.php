@@ -18,7 +18,12 @@ use craft\events\DefineBehaviorsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use yii\base\Event as YiiEvent;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
 
 /**
  * Commerce Review plugin
@@ -48,11 +53,20 @@ class Plugin extends BasePlugin
         });
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     protected function createSettingsModel(): ?Model
     {
         return Craft::createObject(Settings::class);
     }
 
+    /**
+     * @throws SyntaxError
+     * @throws Exception
+     * @throws RuntimeError
+     * @throws LoaderError
+     */
     protected function settingsHtml(): ?string
     {
         return Craft::$app->view->renderTemplate('product-review/_settings.twig', [
@@ -74,7 +88,7 @@ class Plugin extends BasePlugin
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
-            function (RegisterUrlRulesEvent $event) {
+            static function (RegisterUrlRulesEvent $event) {
                 $event->rules['product-review'] = 'product-review/review-cp/index';
                 $event->rules['product-review/index'] = 'product-review/review-cp/index';
                 $event->rules['product-review/review/<id:\d+>'] = 'product-review/review-cp/view';
@@ -88,8 +102,8 @@ class Plugin extends BasePlugin
     {
         Event::on(
             User::class,
-            User::EVENT_DEFINE_BEHAVIORS,
-            function (DefineBehaviorsEvent $event) {
+            Model::EVENT_DEFINE_BEHAVIORS,
+            static function (DefineBehaviorsEvent $event) {
                 $event->behaviors['product-review:user'] = UserBehavior::class;
                 $event->behaviors['product-review:product'] = ProductBehavior::class;
             }
@@ -123,7 +137,7 @@ class Plugin extends BasePlugin
         Event::on(
             CraftVariable::class,
             CraftVariable::EVENT_INIT,
-            function (YiiEvent $e) {
+            static function (YiiEvent $e) {
                 /** @var CraftVariable $variable */
                 $variable = $e->sender;
 

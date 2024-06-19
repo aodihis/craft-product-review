@@ -7,6 +7,7 @@ use craft\base\Model;
 use craft\commerce\base\Purchasable;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
+use craft\commerce\services\Purchasables;
 use craft\elements\User;
 use craft\helpers\UrlHelper;
 use DateTime;
@@ -115,7 +116,7 @@ class Review extends Model
         $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
         $reviewDateCreated = $this->dateCreated;
 
-        if (($maxDaysToReview !== 0) && ($reviewDateCreated === null || ($reviewDateCreated->modify("+ {$maxDaysToReview} day") > $currentTime))) {
+        if (($maxDaysToReview !== 0) && ($reviewDateCreated === null || ($reviewDateCreated->modify("+ $maxDaysToReview day") > $currentTime))) {
             return false;
         }
 
@@ -129,7 +130,7 @@ class Review extends Model
 
     public function getViewUrl(): string
     {
-        return UrlHelper::cpUrl("product-review/review/{$this->id}");
+        return UrlHelper::cpUrl("product-review/review/$this->id");
     }
 
     protected function defineRules(): array

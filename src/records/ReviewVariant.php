@@ -5,6 +5,7 @@ namespace aodihis\productreview\records;
 use aodihis\productreview\db\Table;
 use craft\commerce\records\Variant;
 use craft\db\ActiveRecord;
+use DateTime;
 use yii\db\ActiveQueryInterface;
 
 /**
@@ -27,7 +28,7 @@ class ReviewVariant extends ActiveRecord
 
     public function getVariant(): ActiveQueryInterface
     {
-        return $this->hasOne(Variant::class, ['id' => 'variantId']);
+        return self::hasOne(Variant::class, ['id' => 'variantId']);
     }
 
 }

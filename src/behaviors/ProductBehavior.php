@@ -3,20 +3,30 @@
 namespace aodihis\productreview\behaviors;
 
 use aodihis\productreview\Plugin;
+use craft\commerce\elements\Product;
 use yii\base\Behavior;
+use yii\base\InvalidConfigException;
 
 class ProductBehavior extends Behavior
 {
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function getReview(int $rating = null, string $sort = 'dateCreated DESC'): array
     {
+        /** @var Product $product */
         $product = $this->owner;
-        return Plugin::getInstance()->getRevews()->getProductReview($product->id, $rating, $sort);
+        return Plugin::getInstance()->getReviews()->getProductReviews($product->id, $rating, $sort);
     }
 
-    public function getAverateRating(): float
+    /**
+     * @throws InvalidConfigException
+     */
+    public function getAverageRating(): float
     {
+        /** @var Product $product */
         $product = $this->owner;
-        return Plugin::getInstance()->getRevews()->getAverateRating($product->id);
+        return Plugin::getInstance()->getReviews()->getProductAverageRating($product->id);
     }
 }
