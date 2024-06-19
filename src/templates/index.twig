@@ -21,35 +21,35 @@
     }
 
     .dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    border: 1px solid #ccc;
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-    background-color: #fff;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        border: 1px solid #ccc;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+        background-color: #fff;
     }
 
     .dropdown-item {
-    padding: 10px;
-    cursor: pointer;
+        padding: 10px;
+        cursor: pointer;
     }
 
     .dropdown-item:hover {
-    background-color: #f0f0f0;
+        background-color: #f0f0f0;
     }
 
     .filter-label {
-    margin-bottom: 0.4rem;
-    font-weight: bold;
+        margin-bottom: 0.4rem;
+        font-weight: bold;
     }
 
     /* Width */
 
     .w-1\/10 {
-    width: 10%;
+        width: 10%;
     }
 
     .w-1\/2 {
@@ -100,30 +100,16 @@
     width: 100%;
     }
 
+    .prx {
+    margin-bottom: 40px;
+    }
+
     .filter-container .clear-btn {
     position: absolute;
     cursor: pointer;
     top: 70%;
     right: 5px;
     transform: translateY(-50%);
-    }
-
-    .select-dropdown {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #fff;
-    appearance: none;
-    cursor: pointer;
-    background-image: url("data:image/svg+xml;utf8,
-    <svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
-        <path d='M7 10l5 5 5-5z'/>
-        <path d='M0 0h24v24H0z' fill='none'/>
-    </svg>");
-    background-repeat: no-repeat;
-    background-position-x: 100%;
-    background-position-y: 50%;
     }
 
     .select-dropdown:focus {
@@ -134,13 +120,24 @@
     margin-top: 20%;
     }
 
-    .filter-group-container {
-    margin-bottom: 40px;
+    .select-dropdown {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px; /* Adjust size as necessary */
     }
+
 {% endcss %}
 
 {% block content %}
-    <div class="flex-nowrap flex filter-group-container">
+    <div class="flex-nowrap flex prx">
         <div class="filter-container w-2/5">
             <div class="filter-label"><label for="reviewer-filter" class="">Filter by Reviewer:</label></div>
             <input type="text" id="reviewer-filter" name="reviewer-filter" class="dropdown-input reviewer-input"
