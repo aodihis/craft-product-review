@@ -5,21 +5,21 @@
 
 {% block details %}
     <dl class="meta read-only">
-        <div class="data" bis_skin_checked="1">
+        <div class="data">
             <dt class="heading">ID</dt>
             <dd class="value">{{ review.id }}</dd>
         </div>
-        <div class="data" bis_skin_checked="1">
+        <div class="data">
             <dt class="heading">Reviewer</dt>
             <dd class="value"><a
                         href={{ review.reviewer.cpEditUrl }}>{{ review.reviewer.fullname ? review.reviewer.fullname : review.reviewer.username }}</a>
             </dd>
         </div>
-        <div class="data" bis_skin_checked="1">
+        <div class="data">
             <dt class="heading">Product</dt>
             <dd class="value"><a href={{ review.product.cpEditUrl }}>{{ review.product.title }}</a></dd>
         </div>
-        <div class="data" bis_skin_checked="1">
+        <div class="data" >
             <dt class="heading">Variants</dt>
             <dd class="value">
                 <ul>
@@ -30,11 +30,11 @@
             </dd>
         </div>
 
-        <div class="data" bis_skin_checked="1">
+        <div class="data" >
             <dt class="heading">Created at</dt>
             <dd class="value">{{ review.dateCreated|datetime }}</dd>
         </div>
-        <div class="data" bis_skin_checked="1">
+        <div class="data">
             <dt class="heading">Updated at</dt>
             <dd class="value">{{ review.dateUpdated|datetime }}</dd>
         </div>
@@ -44,8 +44,8 @@
 
 {% block content %}
 
-    <div class="field" data-attribute="comment" bis_skin_checked="1">
-        <div class="heading" bis_skin_checked="1">
+    <div class="field" data-attribute="comment" >
+        <div class="heading">
             <label>Rating</label>
         </div>
         {% for i in 1..review.rating %}
