@@ -29,4 +29,14 @@ class ProductBehavior extends Behavior
         $product = $this->owner;
         return Plugin::getInstance()->getReviews()->getProductAverageRating($product->id);
     }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function getRatingCountInList(): array
+    {
+        /** @var Product $product */
+        $product = $this->owner;
+        return Plugin::getInstance()->getReviews()->getRatingCountInList($product->id);
+    }
 }

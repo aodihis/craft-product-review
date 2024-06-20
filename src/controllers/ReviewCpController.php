@@ -21,9 +21,11 @@ class ReviewCpController extends Controller
         return $this->renderTemplate('product-review/index', compact('maxRating'));
     }
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function actionView(int $id): Response
     {
-
         $review = Plugin::getInstance()->getReviews()->getReviewById($id);
         return $this->renderTemplate('product-review/_view', compact('review'));
     }

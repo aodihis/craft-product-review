@@ -109,7 +109,7 @@ class Reviews extends Component
     {
         $reviewAverage = (new Query())
             ->select([
-                'AVG(rating) as averateRating',
+                'AVG(rating) as averageRating',
             ])
             ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
             ->where(['productId' => $productId])
@@ -119,9 +119,27 @@ class Reviews extends Component
             return 0;
         }
 
-        return number_format((float)$reviewAverage['averateRating'], 2, '.', '');
+        return number_format((float)$reviewAverage['averageRating'], 2, '.', '');
     }
 
+    public function getRatingCountInList(int $productId): array
+    {
+        $reviewCount = (new Query())
+            ->select([
+                'COUNT(id) as total',
+                'rating'
+            ])
+            ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
+            ->where(['productId' => $productId])
+            ->groupBy(['reviews.rating'])->all();
+        return array_map(static function ($rows){
+            return [
+                'total' => $rows['total'],
+                'rating' => $rows['rating']
+            ];
+        }, $reviewCount);
+
+    }
     /**
      * @returns ModelsReview[]
      * @throws InvalidConfigException
