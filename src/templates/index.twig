@@ -62,10 +62,6 @@
         outline: none;
     }
 
-    .filter-btn {
-        margin-top: 25%;
-    }
-
     .select-dropdown {
         width: 100%;
         padding: 10px;
@@ -91,9 +87,6 @@
     .filter-container-rating {
         flex: 0 0 10%;
     }
-    .filter-container-submit{
-        flex: 0 0 10%;
-    }
 
     @media only screen and (max-width: 992px) {
             .filter-container-product  {
@@ -106,10 +99,6 @@
 
             .filter-container-rating {
                 flex: 0 0 40%;
-            }
-
-            .filter-btn {
-                margin-top: 40%;
             }
     }
 {% endcss %}
@@ -146,116 +135,114 @@
                 {% endfor %}
             </select>
         </div>
-
-        <div class="filter-container filter-container-submit">
-            <button id="apply-filter" type="submit" class="btn submit filter-btn">Filter</button>
-        </div>
     </div>
     <div id="table-data"></div>
 {% endblock %}
 
+{#<script>#}
 {% js %}
 
-    var selectedProductId = null;
-    var selectedReviewerId = null;
-    var selectedRating = null;
+var selectedProductId = null;
+var selectedReviewerId = null;
+var selectedRating = null;
 
-    var columns = [
+var columns = [
     { name: 'product', title: Craft.t('app', 'Product'), callback: function(product) {
-    if (product) {
-    return `<a href="${product.cpEditUrl}">${product.title}</a>`;
-    }
-    return '';
-    } },
+            if (product) {
+                return `<a href="${product.cpEditUrl}">${product.title}</a>`;
+            }
+            return '';
+        } },
     { name: 'rating', title: Craft.t('app', 'Rating'), callback: function (rating) {
-    return '<span style="font-size:200%;color:#ffe234;">&starf;</span>'.repeat(rating);
+            return '<span style="font-size:200%;color:#ffe234;">&starf;</span>'.repeat(rating);
 
-    } },
+        } },
     { name: 'comment', title: Craft.t('app', 'Comment') },
     { name: 'reviewer', title: Craft.t('app', 'Reviewer'), callback: function(reviewer) {
-    if (reviewer) {
-    return `<a href="${reviewer.cpEditUrl}">${reviewer.name}</a>`;
-    }
-    return '';
-    } },
+            if (reviewer) {
+                return `<a href="${reviewer.cpEditUrl}">${reviewer.name}</a>`;
+            }
+            return '';
+        } },
     { name: 'url', title: '',
-    callback: function(url) {
-    if (url) {
-    return `<a href="${url}" class="view-btn btn" aria-label="View">View</a>`;
+        callback: function(url) {
+            if (url) {
+                return `<a href="${url}" class="view-btn btn" aria-label="View">View</a>`;
+            }
+            return '';
+        }
     }
-    return '';
-    }
-    }
-    ];
+];
 
-    const adminTable = new Craft.VueAdminTable({
+const adminTable = new Craft.VueAdminTable({
     container: '#table-data',
     padded: true,
     columns: columns,
     tableDataEndpoint: 'product-review/review-cp/get-table-data',
     onQueryParams: function(params) {
-    params.productId = selectedProductId;
-    params.reviewerId = selectedReviewerId;
-    params.rating = selectedRating;
+        params.productId = selectedProductId;
+        params.reviewerId = selectedReviewerId;
+        params.rating = selectedRating;
 
-    return params;
+        return params;
     },
-    });
+});
 
 
-    function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, type) {
+function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, type) {
     menuSelector.innerHTML = "";
 
     if (data.length === 0) {
-    menuSelector.style.display = "none";
-    return;
+        menuSelector.style.display = "none";
+        return;
     }
 
     data.forEach(item => {
-    const listItem = document.createElement("div");
-    listItem.classList.add("dropdown-item");
-    if (type == 'reviewer') {
-    listItem.textContent = item.username;
-    } else {
-    listItem.textContent = item.title;
-    }
+        const listItem = document.createElement("div");
+        listItem.classList.add("dropdown-item");
+        if (type === 'reviewer') {
+            listItem.textContent = item.fullName ?  item.fullName : item.email;
+        } else {
+            listItem.textContent = item.title;
+        }
 
-    listItem.setAttribute("data-id", item.id);
-    listItem.addEventListener("click", function() {
-    if (type == 'reviewer') {
-    inputSelector.value = item.username;
-    selectedReviewerId = item.id
-    } else {
-    inputSelector.value = item.title;
-    selectedProductId = item.id
-    }
-    inputSelector.disabled = true;
-    menuSelector.style.display = "none";
-    clearSelector.style.display = "block";
-    });
-    menuSelector.appendChild(listItem);
+        listItem.setAttribute("data-id", item.id);
+        listItem.addEventListener("click", function() {
+            if (type === 'reviewer') {
+                inputSelector.value = item.fullName ?  item.fullName : item.email;
+                selectedReviewerId = item.id
+            } else {
+                inputSelector.value = item.title;
+                selectedProductId = item.id
+            }
+            inputSelector.disabled = true;
+            menuSelector.style.display = "none";
+            clearSelector.style.display = "block";
+            adminTable.reload();
+        });
+        menuSelector.appendChild(listItem);
     });
 
     menuSelector.style.display = "block";
-    }
+}
 
-    function fetchData(actionUrl, searchTerm) {
+function fetchData(actionUrl, searchTerm) {
     const url = `${actionUrl}&query=${searchTerm}`;
     return fetch(url, {
-    headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-    },
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
     })
-    .then(response => response.json())
-    .then(data => data.items)
-    .catch(error => {
-    console.error("Error fetching data:", error);
-    return [];
-    });
-    }
+        .then(response => response.json())
+        .then(data => data.items)
+        .catch(error => {
+            console.error("Error fetching data:", error);
+            return [];
+        });
+}
 
-    document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function() {
 
     const reviwerInput  = document.querySelector("#reviewer-filter");
     const reviewerMenu  = document.querySelector("#reviewer-menu");
@@ -267,60 +254,62 @@
 
     const ratingInput   = document.querySelector("#rating-filter");
 
-    const applyBtn     = document.querySelector("#apply-filter");
-
-    applyBtn.addEventListener("click", function() {
-    selectedRating = ratingInput.value;
-    adminTable.reload();
-    });
 
     reviwerInput.addEventListener("input", function() {
-    const searchTerm = this.value.trim().toLowerCase();
-    if (searchTerm.length < 2) {
-    return;
-    }
-    const url = `{{ actionUrl('product-review/review-cp/user-search') }}`
-    // Fetch data from API and update dropdown menu
-    fetchData(url, searchTerm)
-    .then(data => {
-    updateDropdownMenu(data,reviewerMenu, reviwerInput, reviewerClear, 'reviewer' );
-    })
-    .catch(error => {
-    console.error("Error fetching data:", error);
-    });
+        const searchTerm = this.value.trim().toLowerCase();
+        if (searchTerm.length < 2) {
+            return;
+        }
+        const url = `{{ actionUrl('product-review/review-cp/user-search') }}`
+        // Fetch data from API and update dropdown menu
+        fetchData(url, searchTerm)
+            .then(data => {
+                updateDropdownMenu(data,reviewerMenu, reviwerInput, reviewerClear, 'reviewer' );
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
+            });
     });
 
     productInput.addEventListener("input", function() {
-    const searchTerm = this.value.trim().toLowerCase();
-    if (searchTerm.length < 2) {
-    return;
-    }
-    const url = `{{ actionUrl('product-review/review-cp/product-search') }}`
-    // Fetch data from API and update dropdown menu
-    fetchData(url, searchTerm)
-    .then(data => {
-    updateDropdownMenu(data, productMenu, productInput, productClear, 'product' );
-    })
-    .catch(error => {
-    console.error("Error fetching data:", error);
-    });
+        const searchTerm = this.value.trim().toLowerCase();
+        if (searchTerm.length < 2) {
+            return;
+        }
+        const url = `{{ actionUrl('product-review/review-cp/product-search') }}`
+        // Fetch data from API and update dropdown menu
+        fetchData(url, searchTerm)
+            .then(data => {
+                updateDropdownMenu(data, productMenu, productInput, productClear, 'product' );
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
+            });
     });
 
+    ratingInput.addEventListener("change", function (event) {
+        selectedRating = ratingInput.value;
+        adminTable.reload();
+    })
     reviewerClear.addEventListener("click", function() {
-    reviwerInput.value = '';
-    selectedReviewerId = null;
-    reviwerInput.disabled = false;
-    this.style.display = "none";
+        reviwerInput.value = '';
+        selectedReviewerId = null;
+        reviwerInput.disabled = false;
+        this.style.display = "none";
+        adminTable.reload();
     });
+
+
 
     productClear.addEventListener("click", function() {
-    productInput.value = '';
-    selectedProductId = null;
-    productInput.disabled = false;
-    this.style.display = "none";
+        productInput.value = '';
+        selectedProductId = null;
+        productInput.disabled = false;
+        this.style.display = "none";
+        adminTable.reload();
     });
 
 
-    });
+});
 
 {% endjs %}
