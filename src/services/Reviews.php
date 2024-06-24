@@ -4,6 +4,7 @@ namespace aodihis\productreview\services;
 
 use aodihis\productreview\db\Table;
 use aodihis\productreview\models\Review as ModelsReview;
+use aodihis\productreview\Plugin;
 use aodihis\productreview\records\Review;
 use aodihis\productreview\records\ReviewVariant;
 use Craft;
@@ -12,12 +13,33 @@ use craft\commerce\elements\Order;
 use craft\commerce\elements\Variant;
 use craft\db\Query;
 use craft\helpers\DateTimeHelper;
+use DateTime;
 use Exception;
 use RuntimeException;
 use yii\base\InvalidConfigException;
+use yii\db\Expression;
 
 class Reviews extends Component
 {
+
+    public function getPendingReviews(): mixed
+    {
+        $query = $this->_buildQuery();
+
+        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
+        $query->where(['updateCount' => 0]);
+
+        if ($maxDaysToReview) {
+            $query->andWhere(new Expression("NOW() < DATE_ADD(reviews.dateCreated, INTERVAL $maxDaysToReview DAY)"));
+        }
+        $reviews = $query->all();
+        foreach ($reviews as &$review) {
+            $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
+            $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
+        }
+        return $reviews;
+
+    }
 
     /**
      * @returns ModelsReview[]
@@ -25,33 +47,15 @@ class Reviews extends Component
      */
     public function getReviews(int $productId = null, int $reviewerId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): array
     {
-        $query = $this->_buildQuery();
-        if ($productId) {
-            $query->andWhere(['productId' => $productId]);
-        }
-
-        if ($reviewerId) {
-            $query->andWhere(['reviewerId' => $reviewerId]);
-        }
-
-        if ($rating) {
-            $query->andWhere(['rating' => $rating]);
-        } else {
-            $query->andWhere(['not', ['rating' => null]]);
-        }
-
-        if ($limit) {
-            $query->limit($limit);
-        }
-
+        $query = $this->_buildReviewedQuery($productId, $reviewerId, $rating, $limit);
         $query->offset($offset)->orderBy($sort);
-
         $reviews = $query->all();
         foreach ($reviews as &$review) {
             $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
+            $comment = $review['comment'];
             $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
+            $review->comment = $comment;
         }
-
         return $reviews;
     }
 
@@ -68,29 +72,14 @@ class Reviews extends Component
             return null;
         }
         $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
-        return Craft::createObject(['class' => ModelsReview::class, 'attributes' => $record]);
+        $model = Craft::createObject(['class' => ModelsReview::class, 'attributes' => $record]);
+        $model->comment = $record['comment'];
+        return $model;
     }
 
-    public function getTotalReviews(int $productId = null, int $reviewerId = null, int $rating = null, int $limit = null): int
+    public function getTotalReviews(int $productId = null, int $reviewerId = null, int $rating = null): int
     {
-        $query = $this->_buildQuery();
-        if ($productId) {
-            $query->andWhere(['productId' => $productId]);
-        }
-
-        if ($reviewerId) {
-            $query->andWhere(['reviewerId' => $reviewerId]);
-        }
-
-        if ($rating) {
-            $query->andWhere(['rating' => $rating]);
-        } else {
-            $query->andWhere(['not', ['rating' => null]]);
-        }
-
-        if ($limit) {
-            $query->limit($limit);
-        }
+        $query = $this->_buildReviewedQuery($productId, $reviewerId, $rating, null);
         return $query->count();
     }
 
@@ -156,7 +145,13 @@ class Reviews extends Component
     public function getItemToReviewForUser(int $userId): array
     {
         $query = $this->_buildQuery();
+        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
         $query->where(['reviewerId' => $userId])->andWhere(['updateCount' => 0]);
+
+        if ($maxDaysToReview) {
+            $query->andWhere(new Expression("NOW() < DATE_ADD(dateCreated, INTERVAL $maxDaysToReview DAY)"));
+        }
+
         $reviews = $query->all();
         foreach ($reviews as &$review) {
             $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
@@ -239,6 +234,7 @@ class Reviews extends Component
 
     /**
      * @throws \yii\db\Exception
+     * @throws InvalidConfigException
      */
     public function createReviewForOrder(Order $order): void
     {
@@ -249,7 +245,10 @@ class Reviews extends Component
         $reviews = [];
 
         foreach ($order->lineItems as $lineItem) {
-            $productId = $lineItem->purchasable->productId;
+            if (!$lineItem->purchasable instanceof Variant) {
+                continue;
+            }
+            $productId = $lineItem->purchasable->getOwnerId();
             if (!$lineItem->purchasable instanceof Variant) {
                 continue;
             }
@@ -271,9 +270,10 @@ class Reviews extends Component
         }
     }
 
+
+
     private function _buildQuery(): Query
     {
-
         return (new Query())
             ->select([
                 'reviews.*',
@@ -283,5 +283,35 @@ class Reviews extends Component
             ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
             ->leftJoin(Table::PRODUCT_REVIEW_VARIANTS . ' variants', '[[variants.reviewId]]=[[reviews.id]]')
             ->groupBy(['reviews.id']);
+    }
+
+    /**
+     * @param int|null $productId
+     * @param int|null $reviewerId
+     * @param int|null $rating
+     * @param int|null $limit
+     * @return Query
+     */
+    private function _buildReviewedQuery(?int $productId, ?int $reviewerId, ?int $rating, ?int $limit): Query
+    {
+        $query = $this->_buildQuery();
+        if ($productId) {
+            $query->andWhere(['productId' => $productId]);
+        }
+
+        if ($reviewerId) {
+            $query->andWhere(['reviewerId' => $reviewerId]);
+        }
+
+        if ($rating) {
+            $query->andWhere(['rating' => $rating]);
+        } else {
+            $query->andWhere(['not', ['rating' => null]]);
+        }
+
+        if ($limit) {
+            $query->limit($limit);
+        }
+        return $query;
     }
 }

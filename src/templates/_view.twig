@@ -53,12 +53,13 @@
         {% endfor %}
     </div>
 
-    {{ forms.textAreaField({
-        label: "Comment"|t('product-review'),
-        id: 'comment',
-        name: 'comment',
-        readonly: true,
-        value: review.comment ? review.comment : 'No Feedback'|t('product-review') ,
-    }) }}
+    <div id="comment-field" class="field" data-attribute="comment" >
+        <div class="heading">
+            <label id="comment-label" for="comment">Comment</label></div>
+        <div class="input ltr">
+            {{ review.comment ? review.comment|raw : 'No Feedback'|t('product-review') }}
+        </div>
+    </div>
+
 
 {% endblock content %}

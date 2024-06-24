@@ -47,17 +47,6 @@ class Review extends Model
             return $this->_product;
         }
 
-        // if ($this->_variants) {
-        //     $this->_product = $this->_variants[0]->owner;
-        //     return $this->_product;
-        // }
-
-        // if ($this->variantIds) {
-        //     $variants = $this->getVariants();
-        //     $this->_product = $variants[0]->owner;
-        //     return $this->_product;
-        // }
-
         return null;
 
     }

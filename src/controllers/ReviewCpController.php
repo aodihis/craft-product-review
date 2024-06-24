@@ -101,11 +101,12 @@ class ReviewCpController extends Controller
 
         $limit = 10;
         $currentPage = $this->request->getParam('page', 1);
+        $offset = ($currentPage - 1) * $limit;
 
         $filterProductId = (int)$this->request->getParam('productId') ?: null;
         $filterReviewerId = (int)$this->request->getParam('reviewerId') ?: null;
         $filterRating = $this->request->getParam('rating') ?: null;
-        $reviews = Plugin::getInstance()->getReviews()->getReviews($filterProductId, $filterReviewerId, $filterRating);
+        $reviews = Plugin::getInstance()->getReviews()->getReviews($filterProductId, $filterReviewerId, $filterRating, 'dateCreated DESC', 10, $offset);
         $total = Plugin::getInstance()->getReviews()->getTotalReviews($filterProductId, $filterReviewerId, $filterRating);
 
         $rows = [];
