@@ -11,21 +11,21 @@ use yii\base\Behavior;
 class ProductQueryBehavior extends Behavior
 {
 
-    public function events()
+    public function events(): array
     {
         return [
             ElementQuery::EVENT_AFTER_PREPARE => 'afterPrepare',
         ];
     }
 
-    public function afterPrepare($event): void
+    public function afterPrepare(): void
     {
         /** @var ProductQuery $productQuery */
         $productQuery = $this->owner;
 
         $reviewAverageQuery = (new Query())
             ->select([
-                'AVG(rating) as averageRating',
+                'Coalesce(AVG(rating),0) as averageRating',
                 'productId'
             ])
             ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])

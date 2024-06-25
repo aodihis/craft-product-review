@@ -3,42 +3,37 @@
 namespace aodihis\productreview\behaviors;
 
 use aodihis\productreview\Plugin;
+use craft\base\Element;
 use craft\commerce\elements\Product;
+use craft\elements\db\ElementQuery;
+use craft\events\RegisterElementTableAttributesEvent;
 use yii\base\Behavior;
 use yii\base\InvalidConfigException;
 
 class ProductBehavior extends Behavior
 {
 
-    private ?float $_averageRating = null;
+    public ?float $averageRating = 0;
 
-    public function setAverageRating(float $rating)
+    public function events(): array
     {
-        $this->_averageRating = $rating;
+        return [
+            Element::EVENT_REGISTER_TABLE_ATTRIBUTES => 'registerTableAttributes',
+        ];
     }
+
+    public function registerTableAttributes(RegisterElementTableAttributesEvent  $events): void
+    {
+    }
+
     /**
      * @throws InvalidConfigException
      */
-    public function getReview(int $rating = null, string $sort = 'dateCreated DESC'): array
+    public function getReviews(int $rating = null, string $sort = 'dateCreated DESC'): array
     {
         /** @var Product $product */
         $product = $this->owner;
         return Plugin::getInstance()->getReviews()->getProductReviews($product->id, $rating, $sort);
-    }
-
-    /**
-     * @throws InvalidConfigException
-     */
-    public function getAverageRating(): float
-    {
-        if ($this->_averageRating !== null) {
-            return $this->_averageRating;
-        }
-
-        /** @var Product $product */
-        $product = $this->owner;
-        $this->_averageRating =  Plugin::getInstance()->getReviews()->getProductAverageRating($product->id);
-        return $this->_averageRating;
     }
 
     /**
