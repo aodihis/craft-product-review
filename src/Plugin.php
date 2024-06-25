@@ -9,6 +9,7 @@ use aodihis\productreview\models\Settings;
 use aodihis\productreview\plugin\Services;
 use aodihis\productreview\web\twig\ProductReviewVariable;
 use Craft;
+use craft\base\Element;
 use craft\base\Event;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
@@ -18,7 +19,8 @@ use craft\commerce\events\OrderStatusEvent;
 use craft\commerce\services\OrderHistories;
 use craft\elements\User;
 use craft\events\DefineBehaviorsEvent;
-use craft\events\PopulateElementEvent;
+use craft\events\RegisterElementSortOptionsEvent;
+use craft\events\RegisterElementTableAttributesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
@@ -133,6 +135,23 @@ class Plugin extends BasePlugin
                 $event->behaviors['product-review:product-query'] = ProductQueryBehavior::class;
             }
         );
+
+        Event::on(
+            Product::class,
+            Element::EVENT_REGISTER_TABLE_ATTRIBUTES,
+            function (RegisterElementTableAttributesEvent $event) {
+                $event->tableAttributes['averageRating'] = ['label' => Craft::t('product-review', 'Rating')];
+            }
+        );
+
+        Event::on(
+            Product::class,
+            Element::EVENT_REGISTER_SORT_OPTIONS,
+            function (RegisterElementSortOptionsEvent $event) {
+                $event->sortOptions['averageRating'] = Craft::t('product-review', 'Rating');
+            }
+        );
+
     }
 
     private function registerOnOrderStatusChange(): void
