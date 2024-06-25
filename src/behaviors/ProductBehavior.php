@@ -10,6 +10,12 @@ use yii\base\InvalidConfigException;
 class ProductBehavior extends Behavior
 {
 
+    private ?float $_averageRating = null;
+
+    public function setAverageRating(float $rating)
+    {
+        $this->_averageRating = $rating;
+    }
     /**
      * @throws InvalidConfigException
      */
@@ -25,9 +31,14 @@ class ProductBehavior extends Behavior
      */
     public function getAverageRating(): float
     {
+        if ($this->_averageRating !== null) {
+            return $this->_averageRating;
+        }
+
         /** @var Product $product */
         $product = $this->owner;
-        return Plugin::getInstance()->getReviews()->getProductAverageRating($product->id);
+        $this->_averageRating =  Plugin::getInstance()->getReviews()->getProductAverageRating($product->id);
+        return $this->_averageRating;
     }
 
     /**

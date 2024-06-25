@@ -3,6 +3,7 @@
 namespace aodihis\productreview;
 
 use aodihis\productreview\behaviors\ProductBehavior;
+use aodihis\productreview\behaviors\ProductQueryBehavior;
 use aodihis\productreview\behaviors\UserBehavior;
 use aodihis\productreview\models\Settings;
 use aodihis\productreview\plugin\Services;
@@ -11,10 +12,13 @@ use Craft;
 use craft\base\Event;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
+use craft\commerce\elements\db\ProductQuery;
+use craft\commerce\elements\Product;
 use craft\commerce\events\OrderStatusEvent;
 use craft\commerce\services\OrderHistories;
 use craft\elements\User;
 use craft\events\DefineBehaviorsEvent;
+use craft\events\PopulateElementEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
@@ -78,9 +82,11 @@ class Plugin extends BasePlugin
     private function attachEventHandlers(): void
     {
         $this->registerUserBehavior();
+        $this->registerProductBehavior();
         $this->registerOnOrderStatusChange();
         $this->registerTwigVariable();
         $this->registerCpRules();
+
     }
 
     public function registerCpRules(): void
@@ -105,7 +111,26 @@ class Plugin extends BasePlugin
             Model::EVENT_DEFINE_BEHAVIORS,
             static function (DefineBehaviorsEvent $event) {
                 $event->behaviors['product-review:user'] = UserBehavior::class;
+
+            }
+        );
+    }
+
+    private function registerProductBehavior(): void
+    {
+        Event::on(
+            Product::class,
+            Model::EVENT_DEFINE_BEHAVIORS,
+            function(DefineBehaviorsEvent $event) {
                 $event->behaviors['product-review:product'] = ProductBehavior::class;
+            }
+        );
+
+        Event::on(
+            ProductQuery::class,
+            Model::EVENT_DEFINE_BEHAVIORS,
+            function(DefineBehaviorsEvent $event) {
+                $event->behaviors['product-review:product-query'] = ProductQueryBehavior::class;
             }
         );
     }
