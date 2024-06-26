@@ -7,6 +7,7 @@ use aodihis\productreview\behaviors\ProductQueryBehavior;
 use aodihis\productreview\behaviors\UserBehavior;
 use aodihis\productreview\models\Settings;
 use aodihis\productreview\plugin\Services;
+use aodihis\productreview\services\FrontEnd;
 use aodihis\productreview\web\twig\ProductReviewVariable;
 use Craft;
 use craft\base\Element;
@@ -88,10 +89,26 @@ class Plugin extends BasePlugin
         $this->registerOnOrderStatusChange();
         $this->registerTwigVariable();
         $this->registerCpRules();
+        $this->registerCraftVariable();
 
     }
 
-    public function registerCpRules(): void
+    private function registerCraftVariable(): void
+    {
+        Event::on(
+            CraftVariable::class,
+            CraftVariable::EVENT_INIT,
+            function(YiiEvent $e) {
+                /** @var CraftVariable $variable */
+                $variable = $e->sender;
+
+                // Attach a service:
+                $variable->set('productReview', FrontEnd::class);
+            }
+        );
+    }
+
+    private function registerCpRules(): void
     {
         Event::on(
             UrlManager::class,

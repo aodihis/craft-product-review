@@ -114,8 +114,8 @@ class ReviewCpController extends Controller
             $rows[] = [
                 'id' => $review->id,
                 'product' => [
-                    'title' => $review->product->title,
-                    'cpEditUrl' => $review->product->getCpEditUrl(),
+                    'title' => $review?->product?->title ? $review->product->title : 'Removed Product',
+                    'cpEditUrl' => $review?->product?->getCpEditUrl() ? $review?->product->getCpEditUrl() : '' ,
                 ],
                 'rating' => $review->rating,
                 'comment' => $review->comment ?: 'No feedback',
