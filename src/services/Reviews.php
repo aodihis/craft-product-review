@@ -49,6 +49,31 @@ class Reviews extends Component
     }
 
     /**
+     * @throws InvalidConfigException
+     */
+    public function getPendingReviewById(int $id): ?ModelsReview
+    {
+
+        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
+
+        $query = $this->_buildQuery();
+        $query->where(['updateCount' => 0]);
+        $query->andWhere(['reviews.id' => $id]);
+        if ($maxDaysToReview) {
+            $query->andWhere(new Expression("NOW() < DATE_ADD(reviews.dateCreated, INTERVAL $maxDaysToReview DAY)"));
+        }
+
+        $record = $query->one();
+        if (!$record) {
+            return null;
+        }
+        $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
+        $model = Craft::createObject(['class' => ModelsReview::class, 'attributes' => $record]);
+        $model->comment = $record['comment'];
+        return $model;
+    }
+
+    /**
      * @returns ModelsReview[]
      * @throws InvalidConfigException
      */
@@ -73,6 +98,7 @@ class Reviews extends Component
     {
         $query = $this->_buildQuery();
         $query->where(['reviews.id' => $id]);
+        $query->andWhere(['updateCount', '>=', '1']);
         $record = $query->one();
 
         if (!$record) {
@@ -83,6 +109,8 @@ class Reviews extends Component
         $model->comment = $record['comment'];
         return $model;
     }
+
+
 
     public function getTotalReviews(int $productId = null, int $reviewerId = null, int $rating = null): int
     {
@@ -127,6 +155,7 @@ class Reviews extends Component
             ])
             ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
             ->where(['productId' => $productId])
+            ->orderBy('reviews.rating DESC')
             ->groupBy(['reviews.rating'])->all();
         return array_map(static function ($rows){
             return [
@@ -134,6 +163,8 @@ class Reviews extends Component
                 'rating' => $rows['rating']
             ];
         }, $reviewCount);
+
+
 
     }
     /**

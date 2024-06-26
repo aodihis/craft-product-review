@@ -11,13 +11,13 @@
 {% endfor %}
 
 {{ forms.selectField({
-    label: "Order status for product to review"|t('product-review'),
-    instructions: "Purchased products will be allowed to review after the order moved to which order status?"|t('product-review'),
-    id: 'reviewOnOrderStatus',
-    name: 'reviewOnOrderStatus',
+    label: "Order Status to review"|t('product-review'),
+    instructions: "Purchased products can be reviewed once the order reaches the following status."|t('product-review'),
+    id: 'orderStatusToReview',
+    name: 'orderStatusToReview',
     options: orderStatues,
-    value: settings.reviewOnOrderStatus,
-    errors: settings.getErrors('reviewOnOrderStatus'),
+    value: settings.orderStatusToReview,
+    errors: settings.getErrors('orderStatusToReview'),
 }) }}
 
 

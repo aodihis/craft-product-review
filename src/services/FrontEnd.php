@@ -24,4 +24,12 @@ class FrontEnd extends Component
     {
         return Plugin::getInstance()->reviews->getReviewById($id);
     }
+
+    /**
+     * @throws InvalidConfigException
+     */
+    public function getPendingReviewById(int $id): ?Review
+    {
+        return Plugin::getInstance()->reviews->getPendingReviewById($id);
+    }
 }

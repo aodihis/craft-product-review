@@ -16,7 +16,7 @@ class Settings extends Model
     // Maximum days to leave review after order completed.
     public int $maxDaysToReview = 30;
 
-    public ?string $reviewOnOrderStatus = null;
+    public ?string $orderStatusToReview = null;
 
     public function getMaxRating(): int
     {

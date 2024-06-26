@@ -12,6 +12,10 @@ use craft\elements\User;
 use craft\helpers\UrlHelper;
 use DateTime;
 
+/**
+ * @property-read User $reviewer
+ * @property-read Product $product
+ */
 class Review extends Model
 {
     public ?int $id = null;
@@ -117,7 +121,7 @@ class Review extends Model
     }
 
 
-    public function getViewUrl(): string
+    public function getCpViewUrl(): string
     {
         return UrlHelper::cpUrl("product-review/review/$this->id");
     }

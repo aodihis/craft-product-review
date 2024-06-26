@@ -3,6 +3,7 @@
 namespace aodihis\productreview\controllers;
 
 
+use aodihis\productreview\models\Review;
 use aodihis\productreview\Plugin;
 use craft\commerce\elements\Product;
 use craft\elements\User;
@@ -106,6 +107,7 @@ class ReviewCpController extends Controller
         $filterProductId = (int)$this->request->getParam('productId') ?: null;
         $filterReviewerId = (int)$this->request->getParam('reviewerId') ?: null;
         $filterRating = $this->request->getParam('rating') ?: null;
+        /** @var Review[] $reviews */
         $reviews = Plugin::getInstance()->getReviews()->getReviews($filterProductId, $filterReviewerId, $filterRating, 'dateCreated DESC', 10, $offset);
         $total = Plugin::getInstance()->getReviews()->getTotalReviews($filterProductId, $filterReviewerId, $filterRating);
 
@@ -123,7 +125,7 @@ class ReviewCpController extends Controller
                     'name' => $review->reviewer->fullName ?: $review->reviewer->username,
                     'cpEditUrl' => $review->reviewer->getCpEditUrl(),
                 ],
-                'url' => $review->getViewUrl(),
+                'url' => $review->getCpViewUrl(),
             ];
         }
         return $this->asJson([

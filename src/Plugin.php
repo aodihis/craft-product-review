@@ -181,7 +181,7 @@ class Plugin extends BasePlugin
                 // @var Order $order
                 $order = $event->order;
 
-                if ($orderHistory->getNewStatus()->handle === $this->getSettings()->reviewOnOrderStatus) {
+                if ($orderHistory->getNewStatus()->handle === $this->getSettings()->orderStatusToReview) {
                     $this->getReviews()->createReviewForOrder($order);
                 }
             }
