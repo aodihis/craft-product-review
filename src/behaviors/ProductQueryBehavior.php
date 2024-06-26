@@ -25,7 +25,7 @@ class ProductQueryBehavior extends Behavior
 
         $reviewAverageQuery = (new Query())
             ->select([
-                'Coalesce(AVG(rating),0) as averageRating',
+                'Coalesce(CAST(AVG(rating) as decimal(10,2)),0) as averageRating',
                 'productId'
             ])
             ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])

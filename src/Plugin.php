@@ -8,7 +8,6 @@ use aodihis\productreview\behaviors\UserBehavior;
 use aodihis\productreview\models\Settings;
 use aodihis\productreview\plugin\Services;
 use aodihis\productreview\services\FrontEnd;
-use aodihis\productreview\web\twig\ProductReviewVariable;
 use Craft;
 use craft\base\Element;
 use craft\base\Event;
@@ -87,7 +86,6 @@ class Plugin extends BasePlugin
         $this->registerUserBehavior();
         $this->registerProductBehavior();
         $this->registerOnOrderStatusChange();
-        $this->registerTwigVariable();
         $this->registerCpRules();
         $this->registerCraftVariable();
 
@@ -183,27 +181,9 @@ class Plugin extends BasePlugin
                 // @var Order $order
                 $order = $event->order;
 
-                // Let the delivery department know the order’s ready to be delivered
-                // ...
-
                 if ($orderHistory->getNewStatus()->handle === $this->getSettings()->reviewOnOrderStatus) {
                     $this->getReviews()->createReviewForOrder($order);
                 }
-            }
-        );
-    }
-
-    private function registerTwigVariable(): void
-    {
-        Event::on(
-            CraftVariable::class,
-            CraftVariable::EVENT_INIT,
-            static function (YiiEvent $e) {
-                /** @var CraftVariable $variable */
-                $variable = $e->sender;
-
-                // Attach a service:
-                $variable->set('productReview', ProductReviewVariable::class);
             }
         );
     }

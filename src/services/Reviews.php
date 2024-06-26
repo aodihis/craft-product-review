@@ -22,12 +22,19 @@ use yii\db\Expression;
 class Reviews extends Component
 {
 
-    public function getPendingReviews(): mixed
+    /**
+     * @throws InvalidConfigException
+     */
+    public function getPendingReviews(int $reviewerId = null): mixed
     {
         $query = $this->_buildQuery();
 
         $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
         $query->where(['updateCount' => 0]);
+
+        if ($reviewerId !== null) {
+            $query->andWhere(['reviewerId' => $reviewerId]);
+        }
 
         if ($maxDaysToReview) {
             $query->andWhere(new Expression("NOW() < DATE_ADD(reviews.dateCreated, INTERVAL $maxDaysToReview DAY)"));
@@ -144,20 +151,7 @@ class Reviews extends Component
      */
     public function getItemToReviewForUser(int $userId): array
     {
-        $query = $this->_buildQuery();
-        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
-        $query->where(['reviewerId' => $userId])->andWhere(['updateCount' => 0]);
-
-        if ($maxDaysToReview) {
-            $query->andWhere(new Expression("NOW() < DATE_ADD(dateCreated, INTERVAL $maxDaysToReview DAY)"));
-        }
-
-        $reviews = $query->all();
-        foreach ($reviews as &$review) {
-            $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
-            $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
-        }
-        return $reviews;
+        return $this->getPendingReviews($userId);
     }
 
 

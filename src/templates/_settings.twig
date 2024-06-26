@@ -3,7 +3,7 @@
 
 {% import '_includes/forms.twig' as forms %}
 
-{% set orderStatues = [] %}
+{% set orderStatues = [ {label: '', value: null}] %}
 {% for status in craft.commerce.orderStatuses.allOrderStatuses %}
     {% set orderStatues = orderStatues|merge([
         {label: status.name, value: status.handle}
@@ -16,7 +16,8 @@
     id: 'reviewOnOrderStatus',
     name: 'reviewOnOrderStatus',
     options: orderStatues,
-    value: settings.reviewOnOrderStatus
+    value: settings.reviewOnOrderStatus,
+    errors: settings.getErrors('reviewOnOrderStatus'),
 }) }}
 
 
