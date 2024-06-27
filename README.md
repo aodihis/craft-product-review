@@ -1,6 +1,6 @@
 # Product Review
 
-Extend your commerce review exprience
+Extend your commerce product review experience.
 
 ## Requirements
 
@@ -23,7 +23,7 @@ Open your terminal and run the following commands:
 cd /path/to/my-project.test
 
 # tell Composer to load the plugin
-composer require aodihis/craft-product-review
+composer require aodihis/product-review
 
 # tell Craft to install the plugin
 ./craft plugin/install product-review
