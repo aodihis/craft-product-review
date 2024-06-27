@@ -11,8 +11,8 @@ use craft\base\Model;
  */
 class Settings extends Model
 {
-    public static int $maxRating = 5;
-    public static int $maxReviewLimit = 1;
+    public static int $defaultMaxRating = 5;
+    public static int $defaultMaxReviewLimit = 1;
     // Maximum days to leave review after order completed.
     public int $maxDaysToReview = 30;
 
@@ -20,12 +20,12 @@ class Settings extends Model
 
     public function getMaxRating(): int
     {
-        return self::$maxRating;
+        return Settings::$defaultMaxRating;
     }
 
     public function getMaxReviewLimit(): int
     {
-        return self::$maxReviewLimit;
+        return self::$defaultMaxReviewLimit;
     }
 
 
