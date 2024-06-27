@@ -107,9 +107,19 @@ class ReviewCpController extends Controller
         $filterProductId = (int)$this->request->getParam('productId') ?: null;
         $filterReviewerId = (int)$this->request->getParam('reviewerId') ?: null;
         $filterRating = $this->request->getParam('rating') ?: null;
+        $criteria = ['status' => 'live'];
+        if ($filterProductId) {
+            $criteria['productId'] = $filterProductId;
+        }
+        if ($filterReviewerId) {
+            $criteria['reviewerId'] = $filterReviewerId;
+        }
+        if ($filterRating) {
+            $criteria['rating'] = $filterRating;
+        }
         /** @var Review[] $reviews */
-        $reviews = Plugin::getInstance()->getReviews()->getReviews($filterProductId, $filterReviewerId, $filterRating, 'dateCreated DESC', 10, $offset);
-        $total = Plugin::getInstance()->getReviews()->getTotalReviews($filterProductId, $filterReviewerId, $filterRating);
+        $reviews = Plugin::getInstance()->getReviews()->getReviews($criteria, 'dateCreated DESC', 10, $offset);
+        $total = Plugin::getInstance()->getReviews()->getTotalReviews($criteria);
 
         $rows = [];
         foreach ($reviews as $review) {

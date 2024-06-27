@@ -12,24 +12,9 @@ class FrontEnd extends Component
     /**
      * @throws InvalidConfigException
      */
-    public function getAllReviews(int $rating = null, ?string $sort = 'dateUpdated DESC', int $limit = 10): array
+    public function getReviewById(int $id, string $status = Review::STATUS_LIVE): ?Review
     {
-        return Plugin::getInstance()->reviews->getReviews(null, null, $rating, $sort, $limit);
+        return Plugin::getInstance()->reviews->getReviewById($id, $status);
     }
 
-    /**
-     * @throws InvalidConfigException
-     */
-    public function getReviewById(int $id): ?Review
-    {
-        return Plugin::getInstance()->reviews->getReviewById($id);
-    }
-
-    /**
-     * @throws InvalidConfigException
-     */
-    public function getPendingReviewById(int $id): ?Review
-    {
-        return Plugin::getInstance()->reviews->getPendingReviewById($id);
-    }
 }

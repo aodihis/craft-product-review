@@ -18,6 +18,10 @@ use DateTime;
  */
 class Review extends Model
 {
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_LIVE = 'live';
+    public const STATUS_EXPIRED = 'expired';
+
     public ?int $id = null;
     public ?int $productId = null;
     public ?int $orderId = null;
@@ -118,6 +122,21 @@ class Review extends Model
         }
 
         return true;
+    }
+
+    public function getStatus(): string
+    {
+        if ($this->updateCount > 0) {
+            return self::STATUS_LIVE;
+        }
+
+        $currentTime = new DateTime("now");
+        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
+        $reviewDateCreated = $this->dateCreated;
+        if (($maxDaysToReview !== 0) && ($reviewDateCreated === null || ($reviewDateCreated->modify("+ $maxDaysToReview day") > $currentTime))) {
+            return self::STATUS_EXPIRED;
+        }
+        return self::STATUS_PENDING;
     }
 
 

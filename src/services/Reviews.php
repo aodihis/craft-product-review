@@ -13,7 +13,6 @@ use craft\commerce\elements\Order;
 use craft\commerce\elements\Variant;
 use craft\db\Query;
 use craft\helpers\DateTimeHelper;
-use DateTime;
 use Exception;
 use RuntimeException;
 use yii\base\InvalidConfigException;
@@ -21,72 +20,25 @@ use yii\db\Expression;
 
 class Reviews extends Component
 {
-
     /**
+     *  possible criteria param = [
+     *          'status' => 'live' | 'pending' | 'all' (default live)
+     *          'productId' => 'ID'
+     *          'reviewerId' => 'ID'
+     *          'rating' => int 1 to 5 ]
+     * @param array $criteria
+     * @param string $sort
+     * @param int|null $limit
+     * @param int|null $offset
+     * @return array
      * @throws InvalidConfigException
      */
-    public function getPendingReviews(int $reviewerId = null): mixed
+    public function getReviews(array $criteria = [], string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): array
     {
-        $query = $this->_buildQuery();
-
-        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
-        $query->where(['updateCount' => 0]);
-
-        if ($reviewerId !== null) {
-            $query->andWhere(['reviewerId' => $reviewerId]);
-        }
-
-        if ($maxDaysToReview) {
-            $query->andWhere(new Expression("NOW() < DATE_ADD(reviews.dateCreated, INTERVAL $maxDaysToReview DAY)"));
-        }
+        $query = $this->_buildReviewQuery($criteria, $sort, $limit, $offset);
         $reviews = $query->all();
         foreach ($reviews as &$review) {
-            $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
-            $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
-        }
-        return $reviews;
-
-    }
-
-    /**
-     * @throws InvalidConfigException
-     */
-    public function getPendingReviewById(int $id): ?ModelsReview
-    {
-
-        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
-
-        $query = $this->_buildQuery();
-        $query->where(['updateCount' => 0]);
-        $query->andWhere(['reviews.id' => $id]);
-        if ($maxDaysToReview) {
-            $query->andWhere(new Expression("NOW() < DATE_ADD(reviews.dateCreated, INTERVAL $maxDaysToReview DAY)"));
-        }
-
-        $record = $query->one();
-        if (!$record) {
-            return null;
-        }
-        $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
-        $model = Craft::createObject(['class' => ModelsReview::class, 'attributes' => $record]);
-        $model->comment = $record['comment'];
-        return $model;
-    }
-
-    /**
-     * @returns ModelsReview[]
-     * @throws InvalidConfigException
-     */
-    public function getReviews(int $productId = null, int $reviewerId = null, int $rating = null, string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): array
-    {
-        $query = $this->_buildReviewedQuery($productId, $reviewerId, $rating, $limit);
-        $query->offset($offset)->orderBy($sort);
-        $reviews = $query->all();
-        foreach ($reviews as &$review) {
-            $review['variantIds'] = array_map('intval', explode(',', $review['variantIds']));
-            $comment = $review['comment'];
-            $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $review]]);
-            $review->comment = $comment;
+            $review = $this->_buildReviewModel($review);
         }
         return $reviews;
     }
@@ -94,27 +46,20 @@ class Reviews extends Component
     /**
      * @throws InvalidConfigException
      */
-    public function getReviewById(int $id): ?ModelsReview
+    public function getReviewById(int $id, string $status = 'live'): ?ModelsReview
     {
-        $query = $this->_buildQuery();
-        $query->where(['reviews.id' => $id]);
-        $query->andWhere(['updateCount', '>=', '1']);
+        $criteria = ['id' => $id, 'status' => $status];
+        $query = $this->_buildReviewQuery($criteria);
         $record = $query->one();
-
         if (!$record) {
             return null;
         }
-        $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
-        $model = Craft::createObject(['class' => ModelsReview::class, 'attributes' => $record]);
-        $model->comment = $record['comment'];
-        return $model;
+        return $this->_buildReviewModel($record);
     }
 
-
-
-    public function getTotalReviews(int $productId = null, int $reviewerId = null, int $rating = null): int
+    public function getTotalReviews(array $criteria): int
     {
-        $query = $this->_buildReviewedQuery($productId, $reviewerId, $rating, null);
+        $query = $this->_buildReviewQuery($criteria);
         return $query->count();
     }
 
@@ -125,25 +70,11 @@ class Reviews extends Component
      */
     public function getProductReviews(int $productId, int $rating = null, string $sort = 'dateCreated DESC'): array
     {
-
-        return $this->getReviews($productId, null, $rating, $sort);
-    }
-
-    public function getProductAverageRating(int $productId): float
-    {
-        $reviewAverage = (new Query())
-            ->select([
-                'AVG(rating) as averageRating',
-            ])
-            ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
-            ->where(['productId' => $productId])
-            ->groupBy(['reviews.productId'])->one();
-
-        if (!$reviewAverage) {
-            return 0;
+        $criteria = ['productId' => $productId];
+        if ($rating) {
+            $criteria['rating'] = $rating;
         }
-
-        return number_format((float)$reviewAverage['averageRating'], 2, '.', '');
+        return $this->getReviews($criteria, $sort);
     }
 
     public function getRatingCountInList(int $productId): array
@@ -163,17 +94,16 @@ class Reviews extends Component
                 'rating' => $rows['rating']
             ];
         }, $reviewCount);
-
-
-
     }
+
     /**
      * @returns ModelsReview[]
      * @throws InvalidConfigException
      */
-    public function getReviewHistoryForUser(int $userId, string $sort = 'dateCreated DESC'): array
+    public function getReviewHistoryForUser(int $reviewerId, string $sort = 'dateCreated DESC'): array
     {
-        return $this->getReviews(null, $userId, null, $sort);
+        $criteria = ['status' =>  ModelsReview::STATUS_LIVE, 'reviewerId' => $reviewerId];
+        return $this->getReviews($criteria, $sort);
     }
 
     /**
@@ -182,7 +112,10 @@ class Reviews extends Component
      */
     public function getItemToReviewForUser(int $userId): array
     {
-        return $this->getPendingReviews($userId);
+        return $this->getReviews([
+            'status' => ModelsReview::STATUS_PENDING,
+            'reviewerId' => $userId
+        ]);
     }
 
 
@@ -295,8 +228,6 @@ class Reviews extends Component
         }
     }
 
-
-
     private function _buildQuery(): Query
     {
         return (new Query())
@@ -311,31 +242,49 @@ class Reviews extends Component
     }
 
     /**
-     * @param int|null $productId
-     * @param int|null $reviewerId
-     * @param int|null $rating
-     * @param int|null $limit
-     * @return Query
+     * @throws InvalidConfigException
      */
-    private function _buildReviewedQuery(?int $productId, ?int $reviewerId, ?int $rating, ?int $limit): Query
+    private function _buildReviewModel(array $record): ModelsReview
+    {
+        $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
+        $comment = $record['comment'];
+        $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $record]]);
+        $review->comment = $comment;
+        return $review;
+    }
+
+    private function _buildReviewQuery(array $criteria, string $sort = null, int $limit = null, int $offset = 0): Query
     {
         $query = $this->_buildQuery();
-        if ($productId) {
-            $query->andWhere(['productId' => $productId]);
-        }
+        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
+        $updateCountCriteria = ['>', 'updateCount', 0];
+        foreach ($criteria as $key => $value) {
+            if ($key === 'status') {
+                if ($value === 'live') {
+                    $query->andWhere($updateCountCriteria);
+                    continue;
+                }
+                if ($value === 'pending') {
+                    $query->andWhere(['updateCount' => 0]);
+                    if ($maxDaysToReview) {
+                        $query->andWhere(new Expression("NOW() < DATE_ADD(reviews.dateCreated, INTERVAL $maxDaysToReview DAY)"));
+                    }
+                    continue;
+                }
+            }
 
-        if ($reviewerId) {
-            $query->andWhere(['reviewerId' => $reviewerId]);
-        }
-
-        if ($rating) {
-            $query->andWhere(['rating' => $rating]);
-        } else {
-            $query->andWhere(['not', ['rating' => null]]);
+            $query->andWhere([$key => $value]);
         }
 
         if ($limit) {
             $query->limit($limit);
+        }
+
+        if ($offset) {
+            $query->offset($offset);
+        }
+        if ($sort) {
+            $query->orderBy($sort);
         }
         return $query;
     }
