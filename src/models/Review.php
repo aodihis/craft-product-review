@@ -15,6 +15,8 @@ use DateTime;
 /**
  * @property-read User $reviewer
  * @property-read Product $product
+ * @property-read string $status
+ * @property-read boolean $isEditable
  */
 class Review extends Model
 {

@@ -29,7 +29,7 @@ class Reviews extends Component
      * @param array $criteria
      * @param string $sort
      * @param int|null $limit
-     * @param int|null $offset
+     * @param int $offset
      * @return array
      * @throws InvalidConfigException
      */
@@ -246,7 +246,9 @@ class Reviews extends Component
      */
     private function _buildReviewModel(array $record): ModelsReview
     {
-        $record['variantIds'] = array_map('intval', explode(',', $record['variantIds']));
+        $record['variantIds'] = array_map(static function ($val) {
+            return (int) $val;
+        }, explode(',', $record['variantIds']));
         $comment = $record['comment'];
         $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $record]]);
         $review->comment = $comment;

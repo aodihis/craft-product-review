@@ -6,7 +6,7 @@ use aodihis\productreview\services\Reviews;
 use yii\base\InvalidConfigException;
 
 /**
- * @property Reviews $reviews
+ * @property-read Reviews $reviews
  */
 trait Services
 {
