@@ -32,7 +32,7 @@ class Settings extends Model
     protected function defineRules(): array
     {
         $rules = parent::defineRules();
-        $rules[] = [['maxDaysToReview', 'reviewOnOrderStatus'], 'required'];
+        $rules[] = [['maxDaysToReview', 'orderStatusToReview'], 'required'];
         $rules[] = [['maxDaysToReview'], 'number'];
         return $rules;
     }

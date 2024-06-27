@@ -36,7 +36,7 @@ class ReviewController extends Controller
         $rating = (int)$this->request->getBodyParam('rating');
         $comment = (string)$this->request->getBodyParam('comment');
 
-        $review = Plugin::getInstance()->getReviews()->getReviewById($id);
+        $review = Plugin::getInstance()->getReviews()->getReviewById($id, null);
 
         if (!$review) {
             throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: $id"));

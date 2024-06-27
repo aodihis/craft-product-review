@@ -33,7 +33,7 @@ class Reviews extends Component
      * @return array
      * @throws InvalidConfigException
      */
-    public function getReviews(array $criteria = [], string $sort = 'dateCreated DESC', int $limit = null, int $offset = null): array
+    public function getReviews(array $criteria = [], string $sort = 'dateCreated DESC', int $limit = null, int $offset = 0): array
     {
         $query = $this->_buildReviewQuery($criteria, $sort, $limit, $offset);
         $reviews = $query->all();
@@ -46,7 +46,7 @@ class Reviews extends Component
     /**
      * @throws InvalidConfigException
      */
-    public function getReviewById(int $id, string $status = 'live'): ?ModelsReview
+    public function getReviewById(int $id, ?string $status = ModelsReview::STATUS_LIVE): ?ModelsReview
     {
         $criteria = ['id' => $id, 'status' => $status];
         $query = $this->_buildReviewQuery($criteria);
@@ -259,6 +259,9 @@ class Reviews extends Component
         $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
         $updateCountCriteria = ['>', 'updateCount', 0];
         foreach ($criteria as $key => $value) {
+            if ($key === 'id') {
+                $key = 'reviews.id';
+            }
             if ($key === 'status') {
                 if ($value === 'live') {
                     $query->andWhere($updateCountCriteria);
@@ -269,6 +272,10 @@ class Reviews extends Component
                     if ($maxDaysToReview) {
                         $query->andWhere(new Expression("NOW() < DATE_ADD(reviews.dateCreated, INTERVAL $maxDaysToReview DAY)"));
                     }
+                    continue;
+                }
+
+                if ($value === null) {
                     continue;
                 }
             }
