@@ -7,7 +7,7 @@
     "email": "aodihis@gmail.com",
     "issues": "https://github.com/aodihis/craft-product-review/issues?state=open",
     "source": "https://github.com/aodihis/craft-product-review",
-    "docs": "https://github.com/aodihis/craft-product-review"
+    "docs": "https://aodihis.gitbook.io/product-review"
   },
   "require": {
     "php": ">=8.2",
