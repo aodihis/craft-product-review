@@ -101,6 +101,13 @@
                 flex: 0 0 40%;
             }
     }
+    .comment {
+        white-space: nowrap;
+        width: 100%;                   /* IE6 needs any width */
+        overflow: hidden;              /* "overflow" value must be different from  visible"*/
+        -o-text-overflow: ellipsis;    /* Opera < 11*/
+        text-overflow:    ellipsis;    /* IE, Safari (WebKit), Opera >= 11, FF > 6 */
+    }
 {% endcss %}
 
 {% block content %}
@@ -154,10 +161,13 @@ var columns = [
             return '';
         } },
     { name: 'rating', title: Craft.t('app', 'Rating'), callback: function (rating) {
-            return '<span style="font-size:200%;color:#ffe234;">&starf;</span>'.repeat(rating);
+            return '<span style="font-size:150%;color:#0a0d0f;">&starf;</span>'.repeat(rating);
 
         } },
-    { name: 'comment', title: Craft.t('app', 'Comment') },
+    { name: 'comment', title: Craft.t('app', 'Comment'), callback: function (comment) {
+            return (comment.length > 25) ? comment.slice(0, 100-1) + '&hellip;' : comment; ;
+
+    } },
     { name: 'reviewer', title: Craft.t('app', 'Reviewer'), callback: function(reviewer) {
             if (reviewer) {
                 return `<a href="${reviewer.cpEditUrl}">${reviewer.name}</a>`;
