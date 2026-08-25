@@ -30,7 +30,7 @@ composer require aodihis/product-review
 
 Reviews are not Craft elements. They do not appear in element queries, they have no field layout,
 and you cannot add custom fields to them. Reach them through the methods in the
-[Twig reference](twig-reference.md) instead.
+[product and user methods](product-and-user-methods.md) instead.
 
 ## After installing
 

@@ -15,7 +15,9 @@ rating and an optional comment, and you read the results in the control panel.
 | [Installation](docs/installation.md) | Requirements, install, uninstall |
 | [Settings](docs/settings.md) | Choosing the order status, the review window |
 | [How reviews work](docs/how-reviews-work.md) | The lifecycle, statuses, guest orders |
-| [Twig reference](docs/twig-reference.md) | Every variable and method available to templates |
+| [Product and user methods](docs/product-and-user-methods.md) | What the plugin adds to products and users, in Twig and PHP |
+| [The review object](docs/review-object.md) | Everything on a review, in Twig and PHP |
+| [Twig variable](docs/twig-variable.md) | `craft.productReview`, for fetching reviews anywhere |
 | [Building a review form](docs/review-form.md) | Submitting a review, with working examples |
 | [Displaying reviews](docs/displaying-reviews.md) | Product pages, stars, breakdowns, structured data |
 | [Control panel](docs/control-panel.md) | Finding the section, filters, permissions |

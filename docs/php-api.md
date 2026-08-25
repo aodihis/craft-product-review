@@ -1,5 +1,9 @@
 # PHP API reference
 
+The services below are PHP only. The methods on products and users are
+[documented separately](product-and-user-methods.md), because they work from Twig as well, and
+so is [the review object](review-object.md) they return.
+
 ## Getting the service
 
 ```php
@@ -93,34 +97,3 @@ suited to templates.
 ### `getReviews(?int $rating = null, ?string $status = 'live', ?string $sort = 'dateUpdated DESC', int $limit = 10): Review[]`
 
 ### `getReviewById(int $id, ?string $status = 'live'): ?Review`
-
-## Review model
-
-`aodihis\productreview\models\Review`
-
-### Properties
-
-| Property | Type |
-| --- | --- |
-| `$id` | `?int` |
-| `$productId` | `?int` |
-| `$orderId` | `?int` |
-| `$reviewerId` | `?int` |
-| `$variantIds` | `?int[]` |
-| `$rating` | `?int` |
-| `$comment` | `?string` |
-| `$dateCreated` | `?DateTime` |
-| `$dateUpdated` | `?DateTime` |
-
-### Methods
-
-| Method | Returns | Notes |
-| --- | --- | --- |
-| `getProduct()` | `?Product` | `null` if deleted |
-| `getReviewer()` | `?User` | `null` if deleted |
-| `getVariants()` | `Variant[]` | |
-| `getStatus()` | `string` | `pending`, `live` or `expired` |
-| `getIsPastReviewWindow()` | `bool` | |
-| `renderComment()` | `?Markup` | Sanitized HTML, safe to output directly |
-| `getPlainComment()` | `?string` | Tags stripped and entities decoded, for non-HTML output |
-| `getCpViewUrl()` | `string` | |

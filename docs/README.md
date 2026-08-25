@@ -9,11 +9,13 @@ with a rating and an optional comment, and you moderate the results from the con
 1. [Installation](installation.md)
 2. [Settings](settings.md)
 3. [How reviews work](how-reviews-work.md)
-4. [Twig reference](twig-reference.md)
-5. [Building a review form](review-form.md)
-6. [Displaying reviews on a product page](displaying-reviews.md)
-7. [Control panel](control-panel.md)
-8. [PHP API reference](php-api.md)
+4. [Product and user methods](product-and-user-methods.md)
+5. [The review object](review-object.md)
+6. [The craft.productReview Twig variable](twig-variable.md)
+7. [Building a review form](review-form.md)
+8. [Displaying reviews on a product page](displaying-reviews.md)
+9. [Control panel](control-panel.md)
+10. [PHP API reference](php-api.md)
 
 ## Quick start
 

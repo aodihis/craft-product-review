@@ -238,8 +238,9 @@ Update the docs when a change adds or alters:
 
 - a **feature** or a control panel surface, such as the review panels in `docs/control-panel.md`
 - a **setting** — the name, what it does, its default, or what happens at its edges
-- a **Twig method, behavior method, or service method** — `docs/twig-reference.md` and
-  `docs/php-api.md` list these individually, so a new one needs a new entry
+- a **Twig method, behavior method, or service method** — `docs/product-and-user-methods.md`,
+  `docs/review-object.md`, `docs/twig-variable.md` and `docs/php-api.md` list these
+  individually, so a new one needs a new entry
 - **behaviour someone might already depend on**, even when no signature changed
 
 ### What the docs are, and are not
