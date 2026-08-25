@@ -23,8 +23,8 @@ use Twig\Markup;
  * @property-read boolean $isEditable
  * @property-read boolean $isPastReviewWindow
  * @property-read boolean $hasReachedEditLimit
- * @property-read Markup|null $safeComment
  * @property-read string|null $plainComment
+ * @method Markup|null renderComment()
  */
 class Review extends Model
 {
@@ -49,6 +49,10 @@ class Review extends Model
 
     private ?Product $_product = null;
     private ?User $_reviewer = null;
+
+    /** Memoized output of renderComment(), and the comment value it was produced from. */
+    private ?Markup $_rendered = null;
+    private ?string $_renderedFor = null;
 
     /** @var Purchasable[]|Variant[] */
     private array $_variants = [];
@@ -191,27 +195,36 @@ class Review extends Model
     }
 
     /**
-     * Returns the comment as HTML that is safe to output.
+     * Renders the comment as HTML that is safe to output.
      *
-     * This is the method to reach for when rendering a comment in a template. It runs the stored
+     * This is the method to reach for when displaying a comment in a template. It runs the stored
      * value through HTML Purifier and returns `Twig\Markup`, so Twig will not escape it and no
      * `|raw` is needed at the call site:
      *
      * ```twig
-     * {{ review.safeComment }}
+     * {{ review.renderComment() }}
      * ```
+     *
+     * Deliberately a method rather than a `get`ter-backed property: purifying is not free, and a
+     * property would read like a field lookup in a loop over many reviews. The result is memoized
+     * per comment value, so repeated calls on the same model cost nothing.
      *
      * Comments are already sanitized on save, but rows written before that was added are still
      * raw, so this purifies again rather than trusting what is in the database. Purifying twice is
      * harmless — the same configuration is used in both places.
      */
-    public function getSafeComment(): ?Markup
+    public function renderComment(): ?Markup
     {
         if ($this->comment === null || trim($this->comment) === '') {
             return null;
         }
 
-        return Template::raw(HtmlPurifier::process($this->comment));
+        if ($this->_renderedFor !== $this->comment) {
+            $this->_rendered = Template::raw(HtmlPurifier::process($this->comment));
+            $this->_renderedFor = $this->comment;
+        }
+
+        return $this->_rendered;
     }
 
     /**

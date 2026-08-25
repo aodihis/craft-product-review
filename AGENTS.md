@@ -110,7 +110,7 @@ level 5 reports 8 — treat new findings as signal, not the existing baseline.
 
   | Context | Use |
   | --- | --- |
-  | HTML, in a template | `{{ review.safeComment }}` — purifies and returns `Twig\Markup`, so no `|raw` is needed |
+  | HTML, in a template | `{{ review.renderComment() }}` — purifies and returns `Twig\Markup`, so no `|raw` is needed |
   | Plain text (CSV, email, feeds) | `{{ review.plainComment }}` — strips tags *and* decodes entities |
   | Control panel JavaScript | `Craft.escapeHtml(...)` — `VueAdminTable` truncates, then writes via `innerHTML` |
 

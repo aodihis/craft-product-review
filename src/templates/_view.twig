@@ -70,7 +70,7 @@
         <div class="heading">
             <label id="comment-label" for="comment">Comment</label></div>
         <div class="input ltr">
-            {{ review.safeComment ?? 'No feedback'|t('product-review') }}
+            {{ review.renderComment() ?? 'No feedback'|t('product-review') }}
         </div>
     </div>
 
