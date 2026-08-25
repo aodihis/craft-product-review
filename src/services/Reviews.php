@@ -14,6 +14,7 @@ use craft\commerce\elements\Variant;
 use craft\db\Query;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\Db;
+use craft\helpers\HtmlPurifier;
 use DateTime;
 use Exception;
 use RuntimeException;
@@ -157,6 +158,14 @@ class Reviews extends Component
             return false;
         }
 
+        // Defence in depth. Comments are reviewer-supplied and reach templates the plugin does not
+        // control, plus JSON responses, so store them already sanitized rather than trusting every
+        // consumer to remember. This does NOT replace sanitizing on output: rows written before
+        // this existed are still raw, and escaping is context-dependent anyway — the control panel
+        // table needs HTML-escaping, not purified markup, because it truncates and writes through
+        // innerHTML.
+        $model->comment = $this->sanitizeComment($model->comment);
+
         $fields = [
             'productId',
             'orderId',
@@ -195,6 +204,21 @@ class Reviews extends Component
         }
 
         return true;
+    }
+
+    /**
+     * Strips anything executable out of a reviewer-supplied comment.
+     *
+     * Uses the same HTML Purifier configuration as Twig's `|purify` filter, so sanitizing on save
+     * and sanitizing on output agree, and running both is harmless.
+     */
+    public function sanitizeComment(?string $comment): ?string
+    {
+        if ($comment === null || trim($comment) === '') {
+            return $comment;
+        }
+
+        return HtmlPurifier::process($comment);
     }
 
     public function isOrderAlreadyReviewed(int $orderId): bool

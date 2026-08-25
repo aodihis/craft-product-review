@@ -8,6 +8,7 @@
 > you grant them this permission** under Settings → Users → *(group)* → Permissions.
 
 - Fixed a potential XSS issue when rendering review comments in the control panel.
+- Review comments are now sanitized when saved, in addition to when they are rendered.
 - Fixed review updates not being restricted to the customer who owns the review.
 - Fixed the review window being applied backwards, which expired new reviews and reopened old ones.
 - Reviews past their review window now fail validation with a message instead of returning an error page.

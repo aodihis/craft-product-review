@@ -96,9 +96,18 @@ level 5 reports 8 — treat new findings as signal, not the existing baseline.
   `Reviews::_buildReviewModel()` reassigns it by hand. Keep that in mind before "simplifying" it.
 - Use the `product-review` translation category for all user-facing strings, and never interpolate
   values into the translation *key* — pass them as params.
-- Reviewer-supplied comment text is untrusted. It is stored raw, so sanitize at every render site
-  (`|purify` in Twig, `Craft.escapeHtml()` in CP JavaScript). Craft's `VueAdminTable` writes cell
-  content via `innerHTML`, so a table column callback is an HTML sink even without `|raw`.
+- Reviewer-supplied comment text is untrusted, and is sanitized **twice** on purpose:
+  - **On save**, `Reviews::saveReview()` runs it through `sanitizeComment()` (HTML Purifier, same
+    config as Twig's `|purify`). This protects consumers the plugin does not control — site
+    templates and JSON responses.
+  - **On output**, every render site sanitizes again. Do not skip this on the grounds that saving
+    already did it. Rows written before save-side sanitizing existed are still raw — no migration
+    was run, deliberately — and escaping is context-dependent regardless: use `|purify` in Twig, but
+    `Craft.escapeHtml()` in control panel JavaScript, where `VueAdminTable` writes column-callback
+    output through `innerHTML` and truncates, so purified markup could be sliced mid-tag.
+
+  Note purifying stores HTML, so a bare `&` is saved as `&amp;`. That renders correctly as HTML, but
+  anything treating the comment as plain text (CSV export, email, `|striptags`) will see the entity.
 
 ## Always update the changelog
 
