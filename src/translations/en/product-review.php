@@ -17,6 +17,7 @@ return [
     'Removed product' => 'Removed product',
     'Deleted user' => 'Deleted user',
     'No feedback' => 'No feedback',
+    'No rating' => 'No rating',
 
     // Settings
     'Order Status to review' => 'Order Status to review',

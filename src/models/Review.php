@@ -16,8 +16,8 @@ use DateTime;
 use Twig\Markup;
 
 /**
- * @property-read User $reviewer
- * @property-read Product $product
+ * @property-read User|null $reviewer
+ * @property-read Product|null $product
  * @property-read string $status
  * @property-read boolean $isEditable
  * @property-read boolean $isPastReviewWindow
@@ -278,7 +278,7 @@ class Review extends Model
     {
         $maxRating = Plugin::getInstance()->getSettings()->maxRating;
         $rules = parent::defineRules();
-        $rules[] = [['id', 'productId', 'orderId', 'reviewerId', 'rating', 'updateCount', 'dateCreated', 'dateUpdated'], 'safe'];
+        $rules[] = [['id', 'productId', 'orderId', 'reviewerId', 'rating', 'comment', 'updateCount', 'dateCreated', 'dateUpdated'], 'safe'];
         $rules[] = [['productId', 'orderId', 'variantIds', 'reviewerId'], 'required'];
         $rules[] = ['rating', 'integer', 'min' => 1, 'max' => $maxRating, 'when' => function ($model) {
             return $model->updateCount > 0;

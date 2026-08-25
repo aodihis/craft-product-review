@@ -96,8 +96,10 @@ of them. The result is a diff touching every file and burying the real change.
 
 - Services are registered in `plugin/Services.php` and reached via `Plugin::getInstance()->getReviews()`.
 - Models are `craft\base\Model`; validation lives in `defineRules()`, never `rules()`.
-- The `Review` model's `comment` is **not** in the `safe` rule, so `setAttributes()` drops it —
-  `Reviews::_buildReviewModel()` reassigns it by hand. Keep that in mind before "simplifying" it.
+- Every attribute the plugin populates from a database row is in the `safe` rule, so
+  `setAttributes()` handles the whole row. `comment` used to be missing, which silently dropped it
+  and forced a manual reassignment afterwards. Add new attributes to that rule rather than
+  reassigning them.
 - Use the `product-review` translation category for all user-facing strings, and never interpolate
   values into the translation *key* — pass them as params.
 - Reviewer-supplied comment text is untrusted, and is sanitized **twice** on purpose:
@@ -187,7 +189,14 @@ the file.
 
 Craft requires the format `## X.Y.Z - YYYY-MM-DD`. **Any level-two heading that does not match is
 ignored, along with every entry beneath it**, so a heading like `## Unreleased` means the whole
-release is invisible in the Plugin Store and the Updates utility. Use the real version and date.
+release is invisible in the Plugin Store and the Updates utility.
+
+While work is unreleased, `## Unreleased` is the right heading precisely *because* Craft ignores it.
+Notes for a version nobody can install yet should not appear in anyone's update screen.
+
+**Renaming it to `## X.Y.Z - YYYY-MM-DD` is part of cutting the release**, alongside deciding the
+version number. Forgetting that step is how a whole release ends up invisible, so check the heading
+before tagging.
 
 ### The one exception: changes that need action after updating
 
