@@ -17,13 +17,16 @@ use craft\helpers\Db;
 use DateTime;
 use Exception;
 use RuntimeException;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 
 class Reviews extends Component
 {
     /**
      *  possible criteria param = [
-     *          'status' => 'live' | 'pending' | 'all' (default live)
+     *          'status' => 'live' | 'pending' | 'expired' | null (default live;
+     *                      null applies no filter, anything else throws)
+     *          'id' => 'ID'
      *          'productId' => 'ID'
      *          'reviewerId' => 'ID'
      *          'rating' => int 1 to 5 ]
@@ -33,6 +36,7 @@ class Reviews extends Component
      * @param int $offset
      * @return array
      * @throws InvalidConfigException
+     * @throws InvalidArgumentException if the status criterion is not recognised
      */
     public function getReviews(array $criteria = [], string $sort = 'dateCreated DESC', int $limit = null, int $offset = 0): array
     {
@@ -296,37 +300,79 @@ class Reviews extends Component
         return $review;
     }
 
+    /**
+     * Narrows a review query by status.
+     *
+     * `null` means "every status" — it is the only way to say that, since `status` is derived
+     * rather than stored and a review is only ever pending, live or expired.
+     *
+     * Anything that is not a known status throws instead of being passed through to the query
+     * as a column name: `status` is not a column, so an unrecognised value used to reach the
+     * database as `WHERE status = '…'` and fail with "unknown column".
+     *
+     * @throws InvalidArgumentException if $status is not a recognised status
+     */
+    private function _applyStatusCondition(Query $query, ?string $status): void
+    {
+        if ($status === null) {
+            return;
+        }
+
+        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
+
+        switch ($status) {
+            case ModelsReview::STATUS_LIVE:
+                $query->andWhere(['>', 'updateCount', 0]);
+                break;
+
+            case ModelsReview::STATUS_PENDING:
+                $query->andWhere(['updateCount' => 0]);
+                if ($maxDaysToReview) {
+                    $query->andWhere(['>', 'reviews.dateCreated', $this->_reviewWindowCutoff($maxDaysToReview)]);
+                }
+                break;
+
+            case ModelsReview::STATUS_EXPIRED:
+                $query->andWhere(['updateCount' => 0]);
+                if ($maxDaysToReview) {
+                    $query->andWhere(['<=', 'reviews.dateCreated', $this->_reviewWindowCutoff($maxDaysToReview)]);
+                } else {
+                    // With no window configured nothing can expire, so match no rows.
+                    $query->andWhere('1=0');
+                }
+                break;
+
+            default:
+                throw new InvalidArgumentException("Invalid review status: \"$status\"");
+        }
+    }
+
+    /**
+     * Returns the creation date at which the review window closes, ready for the database.
+     *
+     * The window condition `now < dateCreated + maxDays` is rearranged to
+     * `dateCreated > now - maxDays` so the cutoff can be computed in PHP and bound as a
+     * parameter. That avoids MySQL-only DATE_ADD()/INTERVAL, keeps the setting out of raw SQL,
+     * and avoids depending on the database session's clock — NOW() follows the DB host's time
+     * zone, while Craft stores dateCreated in UTC.
+     */
+    private function _reviewWindowCutoff(int $maxDaysToReview): string
+    {
+        return Db::prepareDateForDb((new DateTime('now'))->modify("- $maxDaysToReview day"));
+    }
+
     private function _buildReviewQuery(array $criteria, string $sort = null, int $limit = null, int $offset = 0): Query
     {
         $query = $this->_buildQuery();
-        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
-        $updateCountCriteria = ['>', 'updateCount', 0];
+
         foreach ($criteria as $key => $value) {
+            if ($key === 'status') {
+                $this->_applyStatusCondition($query, $value);
+                continue;
+            }
+
             if ($key === 'id') {
                 $key = 'reviews.id';
-            }
-            if ($key === 'status') {
-                if ($value === 'live') {
-                    $query->andWhere($updateCountCriteria);
-                    continue;
-                }
-                if ($value === 'pending') {
-                    $query->andWhere(['updateCount' => 0]);
-                    if ($maxDaysToReview) {
-                        // `now < dateCreated + maxDays` rearranged to `dateCreated > now - maxDays`,
-                        // so the cutoff is computed in PHP and bound as a parameter. That avoids
-                        // MySQL-only DATE_ADD()/INTERVAL, avoids interpolating the setting into raw
-                        // SQL, and avoids depending on the database session's clock — NOW() follows
-                        // the DB host's time zone, while Craft stores dateCreated in UTC.
-                        $cutoff = (new DateTime('now'))->modify("- $maxDaysToReview day");
-                        $query->andWhere(['>', 'reviews.dateCreated', Db::prepareDateForDb($cutoff)]);
-                    }
-                    continue;
-                }
-
-                if ($value === null) {
-                    continue;
-                }
             }
 
             $query->andWhere([$key => $value]);
