@@ -127,15 +127,27 @@ class Review extends Model
     }
 
     /**
-     * Whether this review has been written as many times as the settings allow.
+     * Whether this review can no longer be written to.
      *
-     * `updateCount` counts the first submission as well as later edits, so `maxReviewLimit` is the
-     * total number of times a customer may write the review: at the default of 1, submitting once
-     * locks it. The comparison is `>=` — with `>` a limit of 1 allowed two writes.
+     * A review locks as soon as it has been submitted. `updateCount` is incremented on every save
+     * including the first, so `> 0` means "already submitted" — the same signal getStatus() uses to
+     * decide `live`.
+     *
+     * Note this ignores `Settings::$maxReviewLimit`. That setting is not configurable yet (see the
+     * deferred settings work), and `updateCount` does not yet mean what its name suggests: it
+     * counts submissions rather than *updates* made after the initial one. Rather than compare
+     * against a limit that cannot be changed and a count that does not match its own name, the rule
+     * is stated plainly here.
+     *
+     * When the limit becomes a real setting, this is the method to change — and `updateCount` will
+     * need to stop counting the first submission, or the limit will be off by one.
+     *
+     * Deliberately not keyed off `comment`: the comment is optional, so a rating-only review would
+     * never lock.
      */
     public function getHasReachedEditLimit(): bool
     {
-        return $this->updateCount >= Plugin::getInstance()->getSettings()->maxReviewLimit;
+        return $this->updateCount > 0;
     }
 
     public function getStatus(): string
