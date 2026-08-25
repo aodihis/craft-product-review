@@ -17,6 +17,7 @@ use DateTime;
  * @property-read Product $product
  * @property-read string $status
  * @property-read boolean $isEditable
+ * @property-read boolean $isPastReviewWindow
  */
 class Review extends Model
 {
@@ -111,11 +112,7 @@ class Review extends Model
 
     public function getIsEditable(): bool
     {
-        $currentTime = new DateTime("now");
-        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
-        $reviewDateCreated = $this->dateCreated;
-
-        if (($maxDaysToReview !== 0) && ($reviewDateCreated === null || ($reviewDateCreated->modify("+ $maxDaysToReview day") > $currentTime))) {
+        if ($this->getIsPastReviewWindow()) {
             return false;
         }
 
@@ -132,13 +129,39 @@ class Review extends Model
             return self::STATUS_LIVE;
         }
 
-        $currentTime = new DateTime("now");
-        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
-        $reviewDateCreated = $this->dateCreated;
-        if (($maxDaysToReview !== 0) && ($reviewDateCreated === null || ($reviewDateCreated->modify("+ $maxDaysToReview day") > $currentTime))) {
+        if ($this->getIsPastReviewWindow()) {
             return self::STATUS_EXPIRED;
         }
+
         return self::STATUS_PENDING;
+    }
+
+    /**
+     * Whether the window for leaving this review has closed.
+     *
+     * Mirrors the `pending` condition in Reviews::_buildReviewQuery(), which selects rows
+     * where `NOW() < dateCreated + maxDaysToReview` — so the window is open up to the
+     * deadline and closed once it is reached.
+     */
+    public function getIsPastReviewWindow(): bool
+    {
+        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
+
+        // 0 means the review window never closes.
+        if ($maxDaysToReview === 0) {
+            return false;
+        }
+
+        // An unsaved review has no creation date, so its window cannot have elapsed.
+        if ($this->dateCreated === null) {
+            return false;
+        }
+
+        // DateTime::modify() mutates in place — clone, or this shifts $this->dateCreated
+        // forward every time the status or editability is read.
+        $deadline = (clone $this->dateCreated)->modify("+ $maxDaysToReview day");
+
+        return $deadline <= new DateTime('now');
     }
 
 
