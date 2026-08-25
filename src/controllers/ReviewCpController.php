@@ -5,16 +5,34 @@ namespace aodihis\productreview\controllers;
 
 use aodihis\productreview\models\Review;
 use aodihis\productreview\Plugin;
+use Craft;
 use craft\commerce\elements\Product;
 use craft\elements\User;
 use craft\helpers\AdminTable;
 use craft\web\Controller;
 use yii\base\InvalidConfigException;
 use yii\web\BadRequestHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 
 class ReviewCpController extends Controller
 {
+    /**
+     * @inheritdoc
+     * @throws ForbiddenHttpException
+     */
+    public function beforeAction($action): bool
+    {
+        if (!parent::beforeAction($action)) {
+            return false;
+        }
+
+        // Every action here reads review data, including the two search endpoints, which
+        // otherwise expose user and product records to anyone who can reach the control panel.
+        $this->requirePermission(Plugin::PERMISSION_VIEW_REVIEWS);
+
+        return true;
+    }
 
     public function actionIndex(): Response
     {
@@ -50,13 +68,17 @@ class ReviewCpController extends Controller
         $userQuery = User::find()->limit($limit);
 
         if ($query) {
-            $userQuery->search(urldecode($query));
+            // No urldecode(): Craft has already decoded query params, so decoding again would
+            // corrupt terms containing % or +.
+            $userQuery->search($query);
         }
 
-        $items = $userQuery->collect()->map(function (User $user) {
-            return $user->toArray();
-        });
-
+        // Only what the dropdown renders. toArray() would ship every user attribute — email,
+        // preferences, timestamps — to anyone who can reach this endpoint.
+        $items = $userQuery->collect()->map(fn(User $user) => [
+            'id' => $user->id,
+            'label' => $user->fullName ?: ($user->username ?: $user->email),
+        ])->all();
 
         return $this->asJson(data: compact('items'));
     }
@@ -80,13 +102,13 @@ class ReviewCpController extends Controller
         $productQuery = Product::find()->limit($limit);
 
         if ($query) {
-            $productQuery->search(urldecode($query));
+            $productQuery->search($query);
         }
 
-        $items = $productQuery->collect()->map(function (Product $product) {
-            return $product->toArray();
-        });
-
+        $items = $productQuery->collect()->map(fn(Product $product) => [
+            'id' => $product->id,
+            'label' => $product->title,
+        ])->all();
 
         return $this->asJson(data: compact('items'));
     }
@@ -123,17 +145,30 @@ class ReviewCpController extends Controller
 
         $rows = [];
         foreach ($reviews as $review) {
+            // Both can be null while the review row still exists: a soft-deleted user or product
+            // stays in the trash until garbage collection, so the row's foreign key has not
+            // cascaded yet but the element no longer resolves.
+            $product = $review->getProduct();
+            $reviewer = $review->getReviewer();
+
             $rows[] = [
                 'id' => $review->id,
                 'product' => [
-                    'title' => $review?->product?->title ? $review->product->title : 'Removed Product',
-                    'cpEditUrl' => $review?->product?->getCpEditUrl() ? $review?->product->getCpEditUrl() : '' ,
+                    'title' => $product?->title ?: Craft::t('product-review', 'Removed product'),
+                    'cpEditUrl' => $product?->getCpEditUrl() ?: '',
                 ],
                 'rating' => $review->rating,
-                'comment' => $review->comment ?: 'No feedback',
+                // Plain text, not the stored HTML: the column truncates and the table writes it
+                // through innerHTML, so markup would either be escaped into visible tags or sliced
+                // mid-element. The JS escapes this again before rendering.
+                'comment' => $review->getPlainComment() ?: Craft::t('product-review', 'No feedback'),
                 'reviewer' => [
-                    'name' => $review->reviewer->fullName ?: $review->reviewer->username,
-                    'cpEditUrl' => $review->reviewer->getCpEditUrl(),
+                    // Guest customers have neither a username nor a name, so fall back to the
+                    // email — otherwise their reviews render with a blank author.
+                    'name' => $reviewer
+                        ? ($reviewer->fullName ?: ($reviewer->username ?: $reviewer->email))
+                        : Craft::t('product-review', 'Deleted user'),
+                    'cpEditUrl' => $reviewer?->getCpEditUrl() ?: '',
                 ],
                 'url' => $review->getCpViewUrl(),
             ];

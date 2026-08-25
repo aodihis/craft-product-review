@@ -9,6 +9,7 @@ use Throwable;
 use yii\base\InvalidConfigException;
 use yii\db\Exception;
 use yii\web\BadRequestHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\web\MethodNotAllowedHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -24,6 +25,7 @@ class ReviewController extends Controller
      * @throws Throwable
      * @throws Exception
      * @throws NotFoundHttpException
+     * @throws ForbiddenHttpException
      */
     public function actionSave(): ?Response
     {
@@ -39,23 +41,30 @@ class ReviewController extends Controller
         $review = Plugin::getInstance()->getReviews()->getReviewById($id, null);
 
         if (!$review) {
-            throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: $id"));
+            // The ID goes in as a parameter, not baked into the key — an interpolated key is a
+            // different string for every review and could never be translated.
+            throw new NotFoundHttpException(Craft::t('product-review', 'Unable to find a review with the ID “{id}”', [
+                'id' => $id,
+            ]));
         }
 
-        if ($review->reviewerId !== $currentUser->getId()) {
-            $review->addError("User are not permitted to update this review.");
+        // This must throw rather than collect an error: validate() below clears the error bag,
+        // so anything recorded here would be discarded before it was ever checked.
+        if ((int)$review->reviewerId !== (int)$currentUser->id) {
+            throw new ForbiddenHttpException(Craft::t('product-review', 'You are not permitted to update this review.'));
         }
 
-        if (!$review->getIsEditable()) {
-            $review->addError(Craft::t('product-review', "The item are expired to review."));
+        // Checked before the increment, so the limit is compared against the number of edits
+        // already made. The review window is handled by the model's validation rules instead.
+        if ($review->getHasReachedEditLimit()) {
+            throw new BadRequestHttpException(Craft::t('product-review', 'This review has already been edited the maximum number of times.'));
         }
+
         ++$review->updateCount;
         $review->rating = $rating;
         $review->comment = $comment;
-        $review->validate();
 
-
-        if ($review->hasErrors()) {
+        if (!$review->validate()) {
             $error = Craft::t('product-review', 'Unable to save review.');
             $message = $this->request->getValidatedBodyParam('failMessage') ?? $error;
 

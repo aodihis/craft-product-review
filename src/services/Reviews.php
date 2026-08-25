@@ -13,16 +13,21 @@ use craft\commerce\elements\Order;
 use craft\commerce\elements\Variant;
 use craft\db\Query;
 use craft\helpers\DateTimeHelper;
+use craft\helpers\Db;
+use craft\helpers\HtmlPurifier;
+use DateTime;
 use Exception;
 use RuntimeException;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
-use yii\db\Expression;
 
 class Reviews extends Component
 {
     /**
      *  possible criteria param = [
-     *          'status' => 'live' | 'pending' | 'all' (default live)
+     *          'status' => 'live' | 'pending' | 'expired' | null (default live;
+     *                      null applies no filter, anything else throws)
+     *          'id' => 'ID'
      *          'productId' => 'ID'
      *          'reviewerId' => 'ID'
      *          'rating' => int 1 to 5 ]
@@ -32,15 +37,12 @@ class Reviews extends Component
      * @param int $offset
      * @return array
      * @throws InvalidConfigException
+     * @throws InvalidArgumentException if the status criterion is not recognised
      */
     public function getReviews(array $criteria = [], string $sort = 'dateCreated DESC', int $limit = null, int $offset = 0): array
     {
         $query = $this->_buildReviewQuery($criteria, $sort, $limit, $offset);
-        $reviews = $query->all();
-        foreach ($reviews as &$review) {
-            $review = $this->_buildReviewModel($review);
-        }
-        return $reviews;
+        return $this->_buildReviewModels($query->all());
     }
 
     /**
@@ -54,7 +56,7 @@ class Reviews extends Component
         if (!$record) {
             return null;
         }
-        return $this->_buildReviewModel($record);
+        return $this->_buildReviewModels([$record])[0];
     }
 
     public function getTotalReviews(array $criteria): int
@@ -70,7 +72,12 @@ class Reviews extends Component
      */
     public function getProductReviews(int $productId, int $rating = null, string $sort = 'dateCreated DESC'): array
     {
-        $criteria = ['productId' => $productId];
+        // Only submitted reviews. Every purchase creates an empty row up front, so without this
+        // a product's review list includes placeholders the customer never filled in.
+        $criteria = [
+            'status' => ModelsReview::STATUS_LIVE,
+            'productId' => $productId,
+        ];
         if ($rating) {
             $criteria['rating'] = $rating;
         }
@@ -79,15 +86,22 @@ class Reviews extends Component
 
     public function getRatingCountInList(int $productId): array
     {
-        $reviewCount = (new Query())
+        $query = (new Query())
             ->select([
                 'COUNT(id) as total',
                 'rating'
             ])
             ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
             ->where(['productId' => $productId])
+            ->andWhere(['not', ['rating' => null]])
             ->orderBy('reviews.rating DESC')
-            ->groupBy(['reviews.rating'])->all();
+            ->groupBy(['reviews.rating']);
+
+        // Same restriction as getProductReviews(), via the shared definition of "live", so an
+        // un-submitted review cannot show up as a rating bucket of its own.
+        $this->_applyStatusCondition($query, ModelsReview::STATUS_LIVE);
+
+        $reviewCount = $query->all();
         return array_map(static function ($rows){
             return [
                 'total' => $rows['total'],
@@ -144,6 +158,14 @@ class Reviews extends Component
             return false;
         }
 
+        // Defence in depth. Comments are reviewer-supplied and reach templates the plugin does not
+        // control, plus JSON responses, so store them already sanitized rather than trusting every
+        // consumer to remember. This does NOT replace sanitizing on output: rows written before
+        // this existed are still raw, and escaping is context-dependent anyway — the control panel
+        // table needs HTML-escaping, not purified markup, because it truncates and writes through
+        // innerHTML.
+        $model->comment = $this->sanitizeComment($model->comment);
+
         $fields = [
             'productId',
             'orderId',
@@ -175,13 +197,28 @@ class Reviews extends Component
                     $reviewVariant->save(false);
                 }
             }
-            $transaction?->commit();
+            $transaction->commit();
         } catch (Exception $e) {
-            $transaction?->rollBack();
+            $transaction->rollBack();
             throw $e;
         }
 
         return true;
+    }
+
+    /**
+     * Strips anything executable out of a reviewer-supplied comment.
+     *
+     * Uses the same HTML Purifier configuration as Twig's `|purify` filter, so sanitizing on save
+     * and sanitizing on output agree, and running both is harmless.
+     */
+    public function sanitizeComment(?string $comment): ?string
+    {
+        if ($comment === null || trim($comment) === '') {
+            return $comment;
+        }
+
+        return HtmlPurifier::process($comment);
     }
 
     public function isOrderAlreadyReviewed(int $orderId): bool
@@ -196,6 +233,18 @@ class Reviews extends Component
      */
     public function createReviewForOrder(Order $order): void
     {
+        // Guest checkout still yields a customer: Commerce attaches an inactive user record so the
+        // order has an owner. Reviews are created for those accounts on purpose. The customer
+        // cannot sign in to submit one yet, but if they later register with the same email Craft
+        // claims that existing inactive record rather than making a new one — see
+        // UsersController::actionSaveUser() — so the reviews become theirs, exactly as their
+        // earlier orders do.
+        $customer = $order->getCustomer();
+        if (!$customer) {
+            // No customer at all: nothing to attribute the review to, and reviewerId is NOT NULL.
+            return;
+        }
+
         if ($this->isOrderAlreadyReviewed($order->id)) {
             return;
         }
@@ -218,7 +267,7 @@ class Reviews extends Component
             $reviews[$productId] = new ModelsReview();
             $reviews[$productId]->productId = $productId;
             $reviews[$productId]->orderId = $order->id;
-            $reviews[$productId]->reviewerId = $order->customerId;
+            $reviews[$productId]->reviewerId = $customer->id;
             $reviews[$productId]->updateCount = 0;
             $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
         }
@@ -230,56 +279,148 @@ class Reviews extends Component
 
     private function _buildQuery(): Query
     {
+        // Variant IDs are loaded separately rather than aggregated here. GROUP_CONCAT() is
+        // MySQL-only (PostgreSQL spells it STRING_AGG), and dropping the join also lets
+        // count() run without wrapping the query in a subquery.
         return (new Query())
-            ->select([
-                'reviews.*',
-                'GROUP_CONCAT(`variantId` ORDER BY variants.id) as variantIds',
-            ])
+            ->select(['reviews.*'])
             ->orderBy('reviews.id')
-            ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
-            ->leftJoin(Table::PRODUCT_REVIEW_VARIANTS . ' variants', '[[variants.reviewId]]=[[reviews.id]]')
-            ->groupBy(['reviews.id']);
+            ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews']);
     }
 
     /**
+     * Builds review models from raw rows, resolving every row's variant IDs in one query.
+     *
+     * @param array[] $records
+     * @return ModelsReview[]
      * @throws InvalidConfigException
      */
-    private function _buildReviewModel(array $record): ModelsReview
+    private function _buildReviewModels(array $records): array
     {
-        $record['variantIds'] = array_map(static function ($val) {
-            return (int) $val;
-        }, explode(',', $record['variantIds']));
+        $variantIds = $this->_variantIdsByReviewId(array_column($records, 'id'));
+
+        return array_map(
+            fn(array $record): ModelsReview => $this->_buildReviewModel(
+                $record,
+                $variantIds[(int)$record['id']] ?? []
+            ),
+            $records
+        );
+    }
+
+    /**
+     * Returns variant IDs for the given reviews, indexed by review ID.
+     *
+     * @param int[]|string[] $reviewIds
+     * @return array<int, int[]>
+     */
+    private function _variantIdsByReviewId(array $reviewIds): array
+    {
+        if (!$reviewIds) {
+            return [];
+        }
+
+        $rows = (new Query())
+            ->select(['reviewId', 'variantId'])
+            ->from([Table::PRODUCT_REVIEW_VARIANTS])
+            ->where(['reviewId' => $reviewIds])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+
+        $variantIds = [];
+        foreach ($rows as $row) {
+            $variantIds[(int)$row['reviewId']][] = (int)$row['variantId'];
+        }
+
+        return $variantIds;
+    }
+
+    /**
+     * @param int[] $variantIds
+     * @throws InvalidConfigException
+     */
+    private function _buildReviewModel(array $record, array $variantIds): ModelsReview
+    {
+        $record['variantIds'] = $variantIds;
         $comment = $record['comment'];
         $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $record]]);
         $review->comment = $comment;
         return $review;
     }
 
+    /**
+     * Narrows a review query by status.
+     *
+     * `null` means "every status" — it is the only way to say that, since `status` is derived
+     * rather than stored and a review is only ever pending, live or expired.
+     *
+     * Anything that is not a known status throws instead of being passed through to the query
+     * as a column name: `status` is not a column, so an unrecognised value used to reach the
+     * database as `WHERE status = '…'` and fail with "unknown column".
+     *
+     * @throws InvalidArgumentException if $status is not a recognised status
+     */
+    private function _applyStatusCondition(Query $query, ?string $status): void
+    {
+        if ($status === null) {
+            return;
+        }
+
+        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
+
+        switch ($status) {
+            case ModelsReview::STATUS_LIVE:
+                $query->andWhere(['>', 'updateCount', 0]);
+                break;
+
+            case ModelsReview::STATUS_PENDING:
+                $query->andWhere(['updateCount' => 0]);
+                if ($maxDaysToReview) {
+                    $query->andWhere(['>', 'reviews.dateCreated', $this->_reviewWindowCutoff($maxDaysToReview)]);
+                }
+                break;
+
+            case ModelsReview::STATUS_EXPIRED:
+                $query->andWhere(['updateCount' => 0]);
+                if ($maxDaysToReview) {
+                    $query->andWhere(['<=', 'reviews.dateCreated', $this->_reviewWindowCutoff($maxDaysToReview)]);
+                } else {
+                    // With no window configured nothing can expire, so match no rows.
+                    $query->andWhere('1=0');
+                }
+                break;
+
+            default:
+                throw new InvalidArgumentException("Invalid review status: \"$status\"");
+        }
+    }
+
+    /**
+     * Returns the creation date at which the review window closes, ready for the database.
+     *
+     * The window condition `now < dateCreated + maxDays` is rearranged to
+     * `dateCreated > now - maxDays` so the cutoff can be computed in PHP and bound as a
+     * parameter. That avoids MySQL-only DATE_ADD()/INTERVAL, keeps the setting out of raw SQL,
+     * and avoids depending on the database session's clock — NOW() follows the DB host's time
+     * zone, while Craft stores dateCreated in UTC.
+     */
+    private function _reviewWindowCutoff(int $maxDaysToReview): string
+    {
+        return Db::prepareDateForDb((new DateTime('now'))->modify("- $maxDaysToReview day"));
+    }
+
     private function _buildReviewQuery(array $criteria, string $sort = null, int $limit = null, int $offset = 0): Query
     {
         $query = $this->_buildQuery();
-        $maxDaysToReview = Plugin::getInstance()->getSettings()->maxDaysToReview;
-        $updateCountCriteria = ['>', 'updateCount', 0];
+
         foreach ($criteria as $key => $value) {
+            if ($key === 'status') {
+                $this->_applyStatusCondition($query, $value);
+                continue;
+            }
+
             if ($key === 'id') {
                 $key = 'reviews.id';
-            }
-            if ($key === 'status') {
-                if ($value === 'live') {
-                    $query->andWhere($updateCountCriteria);
-                    continue;
-                }
-                if ($value === 'pending') {
-                    $query->andWhere(['updateCount' => 0]);
-                    if ($maxDaysToReview) {
-                        $query->andWhere(new Expression("NOW() < DATE_ADD(reviews.dateCreated, INTERVAL $maxDaysToReview DAY)"));
-                    }
-                    continue;
-                }
-
-                if ($value === null) {
-                    continue;
-                }
             }
 
             $query->andWhere([$key => $value]);

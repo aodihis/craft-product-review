@@ -9,15 +9,28 @@
             <dt class="heading">ID</dt>
             <dd class="value">{{ review.id }}</dd>
         </div>
+        {# reviewer and product can both be null: a soft-deleted element stays in the trash until
+           garbage collection, so the review's foreign key has not cascaded yet. #}
         <div class="data">
             <dt class="heading">Reviewer</dt>
-            <dd class="value"><a
-                        href={{ review.reviewer.cpEditUrl }}>{{ review.reviewer.fullname ? review.reviewer.fullname : review.reviewer.username }}</a>
+            <dd class="value">
+                {% if review.reviewer %}
+                    {# guest customers have no username or name, so fall back to the email #}
+                    <a href="{{ review.reviewer.cpEditUrl }}">{{ review.reviewer.fullName ?: (review.reviewer.username ?: review.reviewer.email) }}</a>
+                {% else %}
+                    {{ 'Deleted user'|t('product-review') }}
+                {% endif %}
             </dd>
         </div>
         <div class="data">
             <dt class="heading">Product</dt>
-            <dd class="value"><a href={{ review.product.cpEditUrl }}>{{ review.product.title }}</a></dd>
+            <dd class="value">
+                {% if review.product %}
+                    <a href="{{ review.product.cpEditUrl }}">{{ review.product.title }}</a>
+                {% else %}
+                    {{ 'Removed product'|t('product-review') }}
+                {% endif %}
+            </dd>
         </div>
         <div class="data" >
             <dt class="heading">Variants</dt>
@@ -57,7 +70,7 @@
         <div class="heading">
             <label id="comment-label" for="comment">Comment</label></div>
         <div class="input ltr">
-            {{ review.comment ? review.comment|raw : 'No Feedback'|t('product-review') }}
+            {{ review.renderComment() ?? 'No feedback'|t('product-review') }}
         </div>
     </div>
 

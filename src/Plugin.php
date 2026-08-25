@@ -22,6 +22,8 @@ use craft\events\DefineBehaviorsEvent;
 use craft\events\RegisterElementSortOptionsEvent;
 use craft\events\RegisterElementTableAttributesEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\events\RegisterUserPermissionsEvent;
+use craft\services\UserPermissions;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use Twig\Error\LoaderError;
@@ -32,7 +34,7 @@ use yii\base\Exception;
 use yii\base\InvalidConfigException;
 
 /**
- * Commerce Review plugin
+ * Product Review plugin
  *
  * @method static Plugin getInstance()
  * @method Settings getSettings()
@@ -43,6 +45,11 @@ use yii\base\InvalidConfigException;
 class Plugin extends BasePlugin
 {
     use Services;
+
+    /**
+     * Permission required to read reviews in the control panel.
+     */
+    public const PERMISSION_VIEW_REVIEWS = 'productReview-viewReviews';
 
     public string $schemaVersion = '1.0.0';
     public bool $hasCpSettings = true;
@@ -88,7 +95,26 @@ class Plugin extends BasePlugin
         $this->registerOnOrderStatusChange();
         $this->registerCpRules();
         $this->registerCraftVariable();
+        $this->registerPermissions();
 
+    }
+
+    private function registerPermissions(): void
+    {
+        Event::on(
+            UserPermissions::class,
+            UserPermissions::EVENT_REGISTER_PERMISSIONS,
+            static function (RegisterUserPermissionsEvent $event) {
+                $event->permissions[] = [
+                    'heading' => Craft::t('product-review', 'Product Review'),
+                    'permissions' => [
+                        self::PERMISSION_VIEW_REVIEWS => [
+                            'label' => Craft::t('product-review', 'View product reviews'),
+                        ],
+                    ],
+                ];
+            }
+        );
     }
 
     private function registerCraftVariable(): void

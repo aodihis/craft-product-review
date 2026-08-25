@@ -1,5 +1,5 @@
 {% extends "_layouts/cp" %}
-{% set title = "Commerce Reviews" %}
+{% set title = "Product Review"|t('product-review') %}
 
 {% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
 
@@ -153,10 +153,18 @@ var selectedProductId = null;
 var selectedReviewerId = null;
 var selectedRating = null;
 
+// VueAdminTable writes cell content via innerHTML, so anything interpolated below has to be
+// escaped. cpEditUrl is empty when the element has been deleted but the review row survives —
+// render a plain label in that case rather than a link to nowhere.
+function reviewLink(url, label) {
+    var text = Craft.escapeHtml(label || '');
+    return url ? `<a href="${Craft.escapeHtml(url)}">${text}</a>` : text;
+}
+
 var columns = [
     { name: 'product', title: Craft.t('app', 'Product'), callback: function(product) {
             if (product) {
-                return `<a href="${product.cpEditUrl}">${product.title}</a>`;
+                return reviewLink(product.cpEditUrl, product.title);
             }
             return '';
         } },
@@ -165,12 +173,15 @@ var columns = [
 
         } },
     { name: 'comment', title: Craft.t('app', 'Comment'), callback: function (comment) {
-            return (comment.length > 25) ? comment.slice(0, 100-1) + '&hellip;' : comment; ;
+            // VueAdminTable writes cell content via innerHTML, and the comment is
+            // reviewer-supplied — escape it. Truncation would split tags anyway.
+            var text = Craft.escapeHtml(comment);
+            return (text.length > 25) ? text.slice(0, 100-1) + '&hellip;' : text;
 
     } },
     { name: 'reviewer', title: Craft.t('app', 'Reviewer'), callback: function(reviewer) {
             if (reviewer) {
-                return `<a href="${reviewer.cpEditUrl}">${reviewer.name}</a>`;
+                return reviewLink(reviewer.cpEditUrl, reviewer.name);
             }
             return '';
         } },
@@ -210,19 +221,15 @@ function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, ty
     data.forEach(item => {
         const listItem = document.createElement("div");
         listItem.classList.add("dropdown-item");
-        if (type === 'reviewer') {
-            listItem.textContent = item.fullName ?  item.fullName : item.email;
-        } else {
-            listItem.textContent = item.title;
-        }
+        // textContent, so a label is never parsed as markup.
+        listItem.textContent = item.label;
 
         listItem.setAttribute("data-id", item.id);
         listItem.addEventListener("click", function() {
+            inputSelector.value = item.label;
             if (type === 'reviewer') {
-                inputSelector.value = item.fullName ?  item.fullName : item.email;
                 selectedReviewerId = item.id
             } else {
-                inputSelector.value = item.title;
                 selectedProductId = item.id
             }
             inputSelector.disabled = true;
@@ -236,12 +243,14 @@ function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, ty
     menuSelector.style.display = "block";
 }
 
-function fetchData(actionUrl, searchTerm) {
-    const url = `${actionUrl}&query=${searchTerm}`;
+function fetchData(action, searchTerm) {
+    // Craft.getActionUrl() appends the query string with the right separator whether or not
+    // omitScriptNameInUrls is enabled, and encodes the term. Concatenating "&query=" onto
+    // actionUrl() only worked while action URLs happened to contain "?p=...".
+    const url = Craft.getActionUrl(action, { query: searchTerm });
     return fetch(url, {
         headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Accept': 'application/json'
         },
     })
         .then(response => response.json())
@@ -270,9 +279,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if (searchTerm.length < 2) {
             return;
         }
-        const url = `{{ actionUrl('product-review/review-cp/user-search') }}`
         // Fetch data from API and update dropdown menu
-        fetchData(url, searchTerm)
+        fetchData('product-review/review-cp/user-search', searchTerm)
             .then(data => {
                 updateDropdownMenu(data,reviewerMenu, reviwerInput, reviewerClear, 'reviewer' );
             })
@@ -286,9 +294,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if (searchTerm.length < 2) {
             return;
         }
-        const url = `{{ actionUrl('product-review/review-cp/product-search') }}`
         // Fetch data from API and update dropdown menu
-        fetchData(url, searchTerm)
+        fetchData('product-review/review-cp/product-search', searchTerm)
             .then(data => {
                 updateDropdownMenu(data, productMenu, productInput, productClear, 'product' );
             })
