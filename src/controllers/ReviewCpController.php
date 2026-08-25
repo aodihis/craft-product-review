@@ -6,8 +6,6 @@ namespace aodihis\productreview\controllers;
 use aodihis\productreview\models\Review;
 use aodihis\productreview\Plugin;
 use Craft;
-use craft\commerce\elements\Product;
-use craft\elements\User;
 use craft\helpers\AdminTable;
 use craft\web\Controller;
 use yii\base\InvalidConfigException;
@@ -48,71 +46,6 @@ class ReviewCpController extends Controller
         $review = Plugin::getInstance()->getReviews()->getReviewById($id);
         return $this->renderTemplate('product-review/_view', compact('review'));
     }
-
-    /**
-     * @throws BadRequestHttpException
-     */
-    public function actionUserSearch(): Response
-    {
-        $this->requireAcceptsJson();
-
-        $query = $this->request->getQueryParam('query');
-
-        $limit = 30;
-        $users = [];
-
-        if ($query === null) {
-            return $this->asJson($users);
-        }
-
-        $userQuery = User::find()->limit($limit);
-
-        if ($query) {
-            // No urldecode(): Craft has already decoded query params, so decoding again would
-            // corrupt terms containing % or +.
-            $userQuery->search($query);
-        }
-
-        // Only what the dropdown renders. toArray() would ship every user attribute — email,
-        // preferences, timestamps — to anyone who can reach this endpoint.
-        $items = $userQuery->collect()->map(fn(User $user) => [
-            'id' => $user->id,
-            'label' => $user->fullName ?: ($user->username ?: $user->email),
-        ])->all();
-
-        return $this->asJson(data: compact('items'));
-    }
-
-    /**
-     * @throws BadRequestHttpException
-     */
-    public function actionProductSearch(): Response
-    {
-        $this->requireAcceptsJson();
-
-        $query = $this->request->getQueryParam('query');
-
-        $limit = 30;
-        $users = [];
-
-        if ($query === null) {
-            return $this->asJson($users);
-        }
-
-        $productQuery = Product::find()->limit($limit);
-
-        if ($query) {
-            $productQuery->search($query);
-        }
-
-        $items = $productQuery->collect()->map(fn(Product $product) => [
-            'id' => $product->id,
-            'label' => $product->title,
-        ])->all();
-
-        return $this->asJson(data: compact('items'));
-    }
-
 
     /**
      * @throws InvalidConfigException
