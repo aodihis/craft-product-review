@@ -179,26 +179,37 @@ Add entries under the topmost version heading, matching the existing
 `# Release Notes for Commerce Review` / `## <version>` format and the `- ` bullet style already in
 the file.
 
+### Version headings
+
+Craft requires the format `## X.Y.Z - YYYY-MM-DD`. **Any level-two heading that does not match is
+ignored, along with every entry beneath it**, so a heading like `## Unreleased` means the whole
+release is invisible in the Plugin Store and the Updates utility. Use the real version and date.
+
 ### The one exception: changes that need action after updating
 
-If a change means an existing site **must** do something after updating — grant a new permission,
-run a migration, update a template — add a bold blockquote note directly under the version heading,
-above the bullets, in addition to the one-line entry:
+If a change means an existing site **must** do something after updating (grant a new permission, run
+a command, update a template), add a GitHub-style alert directly under the version heading, above
+the bullets, in addition to the one-line entry:
 
 ```markdown
-## Unreleased
+## 5.0.1 - 2026-08-25
 
-> **⚠ Action required after updating:** …what breaks, who it affects, and what to do about it.
+> [!IMPORTANT]
+> Add the “View product reviews” permission to any user group that needs access to the Product
+> Review section.
 
 - Added a “View product reviews” permission, now required for the control panel section.
 ```
 
-Bold inside a blockquote is used deliberately: it renders correctly on GitHub, in the Plugin Store,
-and in Craft's own update screens. Craft's admonition syntax (`> {warning}` in Craft 3,
-`> [!WARNING]` in Craft 4+) could not be confirmed for Craft 5 from the vendored changelogs, since
-they are `export-ignore`d out of Composer installs.
+Craft supports `> [!NOTE]`, `> [!IMPORTANT]` and `> [!WARNING]`, styles them in the Plugin Store and
+the Updates utility, and automatically expands any update containing one.
 
-Keep the note to what a site owner must *do*. The reasoning belongs in the commit message.
+Pick the level honestly. `[!IMPORTANT]` is for something the site owner must do to succeed, which
+covers almost every case here. `[!WARNING]` is for genuine risk, and using it for routine
+housekeeping makes an ordinary update look alarming.
+
+Keep the note to the action itself, in one sentence. Not what broke, not who is affected, not why.
+That belongs in the commit message. A reader scanning an update list wants the instruction.
 
 ## Watch out for
 

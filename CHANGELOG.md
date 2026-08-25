@@ -1,11 +1,10 @@
 # Release Notes for Commerce Review
 
-## Unreleased
+## 5.0.1 - 2026-08-25
 
-> **⚠ Action required after updating:** this release adds a “View product reviews” permission that is
-> now required to open the Product Review section and use its search endpoints. Admins are unaffected,
-> but **any existing non-admin user or group that could previously see reviews will lose access until
-> you grant them this permission** under Settings → Users → *(group)* → Permissions.
+> [!IMPORTANT]
+> Add the “View product reviews” permission to any user group that needs access to the Product
+> Review section.
 
 - Fixed a potential XSS issue when rendering review comments in the control panel.
 - Review comments are now sanitized when saved, in addition to when they are rendered.
@@ -26,6 +25,6 @@
 - Fixed the control panel erroring on reviews whose reviewer or product has been deleted.
 - Added a “View product reviews” permission, now required for the control panel section and its search endpoints.
 
-## 5.0.0
+## 5.0.0 - 2024-06-27
 
 - Initial release
