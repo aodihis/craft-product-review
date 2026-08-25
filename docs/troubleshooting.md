@@ -91,16 +91,22 @@ Admins hold every permission and are unaffected.
 
 ## The reviewer filter returns nothing
 
-The filter needs at least two characters before it searches. It also uses Craft's search index, so a
-newly created user may not be findable until that index has been updated:
+First, the filter needs at least two characters before it searches anything. That covers most cases.
+
+If a customer you know exists still does not appear, the cause is Craft's search index rather than
+the plugin. The filters run `->search()`, which reads Craft's `searchindex` table, and the plugin
+never writes to that table. A customer missing from the index cannot be found by the filter, even
+though they show up fine everywhere else.
+
+This is uncommon, because Craft indexes users and products automatically whenever they are saved. It
+happens when the index is incomplete for reasons outside the plugin, such as a bulk import that
+skipped indexing, a partially restored database, or elements created programmatically with indexing
+turned off.
+
+Rebuilding the index fixes it:
 
 ```bash
 ./craft resave/users --update-search-index
-```
-
-The same applies to the product filter:
-
-```bash
 ./craft resave/products --update-search-index
 ```
 
