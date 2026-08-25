@@ -209,6 +209,15 @@ class Reviews extends Component
      */
     public function createReviewForOrder(Order $order): void
     {
+        // Guest checkout still yields a customer: Commerce attaches an inactive user record so
+        // the order has an owner. That account has no password and can never sign in, so a
+        // review created for it could never be submitted — it would sit pending forever and
+        // show up in the control panel as a review from a customer who does not really exist.
+        $customer = $order->getCustomer();
+        if (!$customer || !$customer->getIsCredentialed()) {
+            return;
+        }
+
         if ($this->isOrderAlreadyReviewed($order->id)) {
             return;
         }
@@ -231,7 +240,7 @@ class Reviews extends Component
             $reviews[$productId] = new ModelsReview();
             $reviews[$productId]->productId = $productId;
             $reviews[$productId]->orderId = $order->id;
-            $reviews[$productId]->reviewerId = $order->customerId;
+            $reviews[$productId]->reviewerId = $customer->id;
             $reviews[$productId]->updateCount = 0;
             $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
         }
