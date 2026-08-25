@@ -15,7 +15,8 @@
             <dt class="heading">Reviewer</dt>
             <dd class="value">
                 {% if review.reviewer %}
-                    <a href="{{ review.reviewer.cpEditUrl }}">{{ review.reviewer.fullName ?: review.reviewer.username }}</a>
+                    {# guest customers have no username or name, so fall back to the email #}
+                    <a href="{{ review.reviewer.cpEditUrl }}">{{ review.reviewer.fullName ?: (review.reviewer.username ?: review.reviewer.email) }}</a>
                 {% else %}
                     {{ 'Deleted user'|t('product-review') }}
                 {% endif %}

@@ -158,8 +158,10 @@ class ReviewCpController extends Controller
                 'rating' => $review->rating,
                 'comment' => $review->comment ?: Craft::t('product-review', 'No feedback'),
                 'reviewer' => [
+                    // Guest customers have neither a username nor a name, so fall back to the
+                    // email — otherwise their reviews render with a blank author.
                     'name' => $reviewer
-                        ? ($reviewer->fullName ?: $reviewer->username)
+                        ? ($reviewer->fullName ?: ($reviewer->username ?: $reviewer->email))
                         : Craft::t('product-review', 'Deleted user'),
                     'cpEditUrl' => $reviewer?->getCpEditUrl() ?: '',
                 ],

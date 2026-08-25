@@ -209,12 +209,15 @@ class Reviews extends Component
      */
     public function createReviewForOrder(Order $order): void
     {
-        // Guest checkout still yields a customer: Commerce attaches an inactive user record so
-        // the order has an owner. That account has no password and can never sign in, so a
-        // review created for it could never be submitted — it would sit pending forever and
-        // show up in the control panel as a review from a customer who does not really exist.
+        // Guest checkout still yields a customer: Commerce attaches an inactive user record so the
+        // order has an owner. Reviews are created for those accounts on purpose. The customer
+        // cannot sign in to submit one yet, but if they later register with the same email Craft
+        // claims that existing inactive record rather than making a new one — see
+        // UsersController::actionSaveUser() — so the reviews become theirs, exactly as their
+        // earlier orders do.
         $customer = $order->getCustomer();
-        if (!$customer || !$customer->getIsCredentialed()) {
+        if (!$customer) {
+            // No customer at all: nothing to attribute the review to, and reviewerId is NOT NULL.
             return;
         }
 
