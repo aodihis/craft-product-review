@@ -121,6 +121,43 @@ level 5 reports 8 — treat new findings as signal, not the existing baseline.
   Note purifying stores HTML, so a bare `&` is saved as `&amp;` — correct as HTML, visible as an
   entity anywhere the comment is treated as plain text, which is what `plainComment` is for.
 
+## Never remove a public API outright — deprecate it first
+
+Anything a site can call is public API, and removing it breaks their templates on update. That
+includes more than it looks like:
+
+- service methods on `Reviews` (reachable as `Plugin::getInstance()->getReviews()`)
+- model accessors used from Twig — `review.status`, `review.plainComment`, `review.renderComment()`
+- behavior methods — `product.getReviews()`, `product.getRatingCountInList()`,
+  `user.getReviewHistory()`, `user.getWaitingToReviewItems()`
+- the `craft.productReview` variable and everything on it
+- plugin settings names, since they are stored in project config
+
+To retire one, deprecate it for at least one minor release before deleting it:
+
+1. **Keep it working.** Leave the old method in place and forward to the replacement — never leave
+   a deprecated method behaving differently from the one it delegates to.
+2. **Mark it in the docblock**, naming the version and the replacement:
+   `@deprecated in 5.1.0. Use [[renderComment()]] instead.`
+3. **Log it at runtime**, so it appears in the control panel's Deprecation Warnings utility rather
+   than only being noticed by someone reading source:
+
+   ```php
+   Craft::$app->getDeprecator()->log(__METHOD__, 'Reviews::oldMethod() has been deprecated. Use Reviews::newMethod() instead.');
+   ```
+
+   `log()` takes a unique key first — `__METHOD__` is the right one, so repeated calls collapse into
+   a single warning.
+4. **Say so in the changelog**, naming both sides: *"Deprecated `x`. Use `y` instead."*
+5. **Delete it in the next major version**, not before.
+
+Craft Commerce's own `LineItems::createLineItem()` is a good worked example of all four steps.
+
+The exception is an API that has never shipped. Renaming something added earlier in the same
+unreleased batch is just editing an unreleased change — no deprecation cycle, since nothing outside
+the repo can be calling it yet. Check whether it appears under a released heading in `CHANGELOG.md`
+before assuming it is safe to rename.
+
 ## Always update the changelog
 
 Every change gets an entry in `CHANGELOG.md` — **one short single-line sentence**, no exceptions.
