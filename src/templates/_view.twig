@@ -57,7 +57,7 @@
         <div class="heading">
             <label id="comment-label" for="comment">Comment</label></div>
         <div class="input ltr">
-            {{ review.comment ? review.comment|raw : 'No Feedback'|t('product-review') }}
+            {{ review.comment ? review.comment|purify|raw : 'No Feedback'|t('product-review') }}
         </div>
     </div>
 

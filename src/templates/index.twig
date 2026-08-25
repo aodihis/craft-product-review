@@ -165,7 +165,10 @@ var columns = [
 
         } },
     { name: 'comment', title: Craft.t('app', 'Comment'), callback: function (comment) {
-            return (comment.length > 25) ? comment.slice(0, 100-1) + '&hellip;' : comment; ;
+            // VueAdminTable writes cell content via innerHTML, and the comment is
+            // reviewer-supplied — escape it. Truncation would split tags anyway.
+            var text = Craft.escapeHtml(comment);
+            return (text.length > 25) ? text.slice(0, 100-1) + '&hellip;' : text;
 
     } },
     { name: 'reviewer', title: Craft.t('app', 'Reviewer'), callback: function(reviewer) {
