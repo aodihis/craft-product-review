@@ -41,7 +41,11 @@ class ReviewController extends Controller
         $review = Plugin::getInstance()->getReviews()->getReviewById($id, null);
 
         if (!$review) {
-            throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: $id"));
+            // The ID goes in as a parameter, not baked into the key — an interpolated key is a
+            // different string for every review and could never be translated.
+            throw new NotFoundHttpException(Craft::t('product-review', 'Unable to find a review with the ID “{id}”', [
+                'id' => $id,
+            ]));
         }
 
         // This must throw rather than collect an error: validate() below clears the error bag,

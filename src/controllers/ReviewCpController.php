@@ -68,7 +68,9 @@ class ReviewCpController extends Controller
         $userQuery = User::find()->limit($limit);
 
         if ($query) {
-            $userQuery->search(urldecode($query));
+            // No urldecode(): Craft has already decoded query params, so decoding again would
+            // corrupt terms containing % or +.
+            $userQuery->search($query);
         }
 
         // Only what the dropdown renders. toArray() would ship every user attribute — email,
@@ -100,7 +102,7 @@ class ReviewCpController extends Controller
         $productQuery = Product::find()->limit($limit);
 
         if ($query) {
-            $productQuery->search(urldecode($query));
+            $productQuery->search($query);
         }
 
         $items = $productQuery->collect()->map(fn(Product $product) => [

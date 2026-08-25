@@ -243,12 +243,14 @@ function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, ty
     menuSelector.style.display = "block";
 }
 
-function fetchData(actionUrl, searchTerm) {
-    const url = `${actionUrl}&query=${searchTerm}`;
+function fetchData(action, searchTerm) {
+    // Craft.getActionUrl() appends the query string with the right separator whether or not
+    // omitScriptNameInUrls is enabled, and encodes the term. Concatenating "&query=" onto
+    // actionUrl() only worked while action URLs happened to contain "?p=...".
+    const url = Craft.getActionUrl(action, { query: searchTerm });
     return fetch(url, {
         headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Accept': 'application/json'
         },
     })
         .then(response => response.json())
@@ -277,9 +279,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if (searchTerm.length < 2) {
             return;
         }
-        const url = `{{ actionUrl('product-review/review-cp/user-search') }}`
         // Fetch data from API and update dropdown menu
-        fetchData(url, searchTerm)
+        fetchData('product-review/review-cp/user-search', searchTerm)
             .then(data => {
                 updateDropdownMenu(data,reviewerMenu, reviwerInput, reviewerClear, 'reviewer' );
             })
@@ -293,9 +294,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if (searchTerm.length < 2) {
             return;
         }
-        const url = `{{ actionUrl('product-review/review-cp/product-search') }}`
         // Fetch data from API and update dropdown menu
-        fetchData(url, searchTerm)
+        fetchData('product-review/review-cp/product-search', searchTerm)
             .then(data => {
                 updateDropdownMenu(data, productMenu, productInput, productClear, 'product' );
             })
