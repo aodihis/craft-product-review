@@ -1,0 +1,13 @@
+includes:
+    - vendor/craftcms/phpstan/phpstan.neon
+
+parameters:
+    level: 5
+    paths:
+        - src
+
+    # Craft and Commerce are not autoloaded during analysis, so point PHPStan at their source
+    # for the classes this plugin extends and type-hints against.
+    scanDirectories:
+        - vendor/craftcms/cms/src
+        - vendor/craftcms/commerce/src

@@ -5,7 +5,7 @@ namespace aodihis\productreview\models;
 use craft\base\Model;
 
 /**
- * Commerce Review settings
+ * Product Review settings
  * @property-read int $maxReviewLimit
  * @property-read int $maxRating
  */

@@ -197,9 +197,9 @@ class Reviews extends Component
                     $reviewVariant->save(false);
                 }
             }
-            $transaction?->commit();
+            $transaction->commit();
         } catch (Exception $e) {
-            $transaction?->rollBack();
+            $transaction->rollBack();
             throw $e;
         }
 

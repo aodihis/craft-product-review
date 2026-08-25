@@ -1,6 +1,6 @@
-# Release Notes for Commerce Review
+# Release Notes for Product Review
 
-## 5.0.1 - 2026-08-25
+## 5.1.0 - 2026-08-25
 
 > [!IMPORTANT]
 > Add the “View product reviews” permission to any user group that needs access to the Product

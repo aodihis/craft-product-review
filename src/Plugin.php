@@ -34,7 +34,7 @@ use yii\base\Exception;
 use yii\base\InvalidConfigException;
 
 /**
- * Commerce Review plugin
+ * Product Review plugin
  *
  * @method static Plugin getInstance()
  * @method Settings getSettings()

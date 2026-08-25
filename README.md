@@ -33,7 +33,7 @@ You can install this plugin from the Plugin Store or with Composer.
 
 #### From the Plugin Store
 
-Go to the Plugin Store in your project’s Control Panel and search for “Commerce Review”. Then press “Install”.
+Go to the Plugin Store in your project’s Control Panel and search for “Product Review”. Then press “Install”.
 
 #### With Composer
 

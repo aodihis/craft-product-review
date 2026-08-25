@@ -11,7 +11,7 @@ configurable time window.
 
 - Namespace: `aodihis\productreview\` → `src/`
 - Plugin handle: `product-review` — this is also the `Craft::t()` translation category
-- Requires PHP >= 8.2, `craftcms/cms ^5.0.0`, `craftcms/commerce ^5.0.0-beta3`
+- Requires PHP >= 8.2, `craftcms/cms ^5.0.0`, `craftcms/commerce ^5.0.0`
 - Licensed proprietary; docs at https://aodihis.gitbook.io/product-review
 
 ## How it fits together
@@ -81,12 +81,16 @@ Notes that will save you time:
 ```bash
 composer check-cs    # ecs
 composer fix-cs      # ecs --fix
-composer phpstan     # NOTE: no phpstan.neon is committed; this will not run as-is
+composer phpstan     # level 5, configured in phpstan.neon
 ```
 
-To run PHPStan, write a config including `vendor/craftcms/phpstan/phpstan.neon` and scanning
-`vendor/craftcms/cms/src` + `vendor/craftcms/commerce/src`. Level 8 currently reports 53 issues,
-level 5 reports 8 — treat new findings as signal, not the existing baseline.
+**PHPStan is clean at level 5. Keep it that way** — any finding is one you introduced, so fix it
+rather than adding it to a baseline. Level 8 still reports pre-existing issues, mostly missing
+iterable value types, so raising the level is a separate piece of work.
+
+Do not run `composer fix-cs` on Windows without checking the diff first. Every file in the repo is
+CRLF in the working copy, `.gitattributes` normalises to LF on commit, and ECS wants to rewrite all
+of them. The result is a diff touching every file and burying the real change.
 
 ## Conventions
 
@@ -176,7 +180,7 @@ compress the whole change into a single line.
 ```
 
 Add entries under the topmost version heading, matching the existing
-`# Release Notes for Commerce Review` / `## <version>` format and the `- ` bullet style already in
+`# Release Notes for Product Review` / `## <version>` format and the `- ` bullet style already in
 the file.
 
 ### Version headings

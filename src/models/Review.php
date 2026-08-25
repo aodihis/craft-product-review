@@ -8,7 +8,6 @@ use craft\base\Model;
 use craft\commerce\base\Purchasable;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
-use craft\commerce\services\Purchasables;
 use craft\elements\User;
 use craft\helpers\HtmlPurifier;
 use craft\helpers\Template;
@@ -105,7 +104,7 @@ class Review extends Model
 
 
     /**
-     * @return Purchasables[]|Variant[]
+     * @return Purchasable[]|Variant[]
      */
     public function getVariants(): array
     {
