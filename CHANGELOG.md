@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added review panels that can be added to product, order and user field layouts.
 - Removed the reviewer and product search endpoints, which the rebuilt filters no longer use.
 - Rebuilt the reviews list filters using Craft’s own element selectors, so they match the rest of the control panel.
 - Added an icon for the Product Review section in the control panel navigation.

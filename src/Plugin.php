@@ -5,6 +5,9 @@ namespace aodihis\productreview;
 use aodihis\productreview\behaviors\ProductBehavior;
 use aodihis\productreview\behaviors\ProductQueryBehavior;
 use aodihis\productreview\behaviors\UserBehavior;
+use aodihis\productreview\fieldlayoutelements\OrderReviews;
+use aodihis\productreview\fieldlayoutelements\ProductReviews;
+use aodihis\productreview\fieldlayoutelements\UserReviews;
 use aodihis\productreview\models\Settings;
 use aodihis\productreview\plugin\Services;
 use aodihis\productreview\services\FrontEnd;
@@ -14,15 +17,18 @@ use craft\base\Event;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
 use craft\commerce\elements\db\ProductQuery;
+use craft\commerce\elements\Order;
 use craft\commerce\elements\Product;
 use craft\commerce\events\OrderStatusEvent;
 use craft\commerce\services\OrderHistories;
 use craft\elements\User;
 use craft\events\DefineBehaviorsEvent;
+use craft\events\DefineFieldLayoutElementsEvent;
 use craft\events\RegisterElementSortOptionsEvent;
 use craft\events\RegisterElementTableAttributesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterUserPermissionsEvent;
+use craft\models\FieldLayout;
 use craft\services\UserPermissions;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
@@ -96,7 +102,43 @@ class Plugin extends BasePlugin
         $this->registerCpRules();
         $this->registerCraftVariable();
         $this->registerPermissions();
+        $this->registerFieldLayoutUiElements();
 
+    }
+
+    /**
+     * Offers the review list UI elements to the field layouts that can resolve reviews.
+     *
+     * Only product, order and user layouts get one, and each gets the single element written for
+     * it, because the lookup differs: a product's reviews are the ones written *about* it, a
+     * user's are the ones written *by* them, and an order's are the ones it asked for. Every other
+     * layout, variants included, is left alone rather than offered a panel that could not resolve
+     * anything.
+     *
+     * These are UI elements rather than fields on purpose. Reviews are written by customers on the
+     * front end, so there is nothing to fill in and nothing to store on the element being edited,
+     * and leaving it as a layout element keeps the choice of whether to show it with the developer.
+     */
+    private function registerFieldLayoutUiElements(): void
+    {
+        Event::on(
+            FieldLayout::class,
+            FieldLayout::EVENT_DEFINE_UI_ELEMENTS,
+            static function (DefineFieldLayoutElementsEvent $event) {
+                $elements = [
+                    Product::class => ProductReviews::class,
+                    Order::class => OrderReviews::class,
+                    User::class => UserReviews::class,
+                ];
+
+                /** @var FieldLayout $layout */
+                $layout = $event->sender;
+
+                if (isset($elements[$layout->type])) {
+                    $event->elements[] = $elements[$layout->type];
+                }
+            }
+        );
     }
 
     private function registerPermissions(): void

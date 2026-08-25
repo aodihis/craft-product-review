@@ -46,6 +46,10 @@ elements. Reads go through `craft\db\Query` in `services/Reviews.php`, not the A
   `ProductQueryBehavior`, which joins an average-rating subquery into *every* product query so
   `averageRating` works as a table attribute and sort option.
 - Public write endpoint: `ReviewController::actionSave()`.
+- Field layout UI elements in `fieldlayoutelements/`, offered to product, order and user layouts by
+  `Plugin::registerFieldLayoutUiElements()` based on the layout's `type`. They are UI elements
+  rather than fields because reviews are written on the front end: there is nothing to fill in, and
+  nothing to store on the element being edited.
 
 ## Local development
 
@@ -223,6 +227,34 @@ housekeeping makes an ordinary update look alarming.
 
 Keep the note to the action itself, in one sentence. Not what broke, not who is affected, not why.
 That belongs in the commit message. A reader scanning an update list wants the instruction.
+
+## Always update the documentation
+
+`docs/` is the manual a site owner reads. Anything that changes what they can do, or how they do it,
+belongs there in the same commit as the code. A feature that only exists in the changelog is a
+feature nobody finds.
+
+Update the docs when a change adds or alters:
+
+- a **feature** or a control panel surface, such as the review panels in `docs/control-panel.md`
+- a **setting** — the name, what it does, its default, or what happens at its edges
+- a **Twig method, behavior method, or service method** — `docs/twig-reference.md` and
+  `docs/php-api.md` list these individually, so a new one needs a new entry
+- an **extension point**, in `docs/extending.md`
+- **behaviour someone might already depend on**, even when no signature changed
+
+Two rules that are easy to miss:
+
+- **Rewrite what a change made wrong, do not only append.** Rebuilding the control panel filters
+  meant the old "type two or more characters to search" description was describing something that no
+  longer existed. Grep `docs/` for the thing you touched before assuming only an addition is needed.
+- **A removal is a documentation change too.** Deleting an endpoint or a method means deleting or
+  correcting the paragraph that promised it.
+
+This is separate from the changelog, and does not replace it. The changelog says *what changed in
+this release* in one line; the docs say *how the thing works* for someone who was not watching.
+A user-facing change usually needs both, and adding a setting needs `docs/settings.md` as well as
+the changelog line.
 
 ## Watch out for
 

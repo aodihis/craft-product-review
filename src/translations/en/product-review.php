@@ -18,6 +18,28 @@ return [
     'Deleted user' => 'Deleted user',
     'No feedback' => 'No feedback',
     'No rating' => 'No rating',
+    'Reviewer' => 'Reviewer',
+    'Product' => 'Product',
+    'Comment' => 'Comment',
+    'Status' => 'Status',
+    'Date' => 'Date',
+    'Actions' => 'Actions',
+    'View' => 'View',
+    'Any' => 'Any',
+    'Choose a customer' => 'Choose a customer',
+    'Choose a product' => 'Choose a product',
+    'Pending' => 'Pending',
+    'Live' => 'Live',
+    'Expired' => 'Expired',
+
+    // Field layout review panels
+    'Product Reviews' => 'Product Reviews',
+    'Order Reviews' => 'Order Reviews',
+    'Customer Reviews' => 'Customer Reviews',
+    'No one has reviewed this product yet.' => 'No one has reviewed this product yet.',
+    'This order has not asked for any reviews.' => 'This order has not asked for any reviews.',
+    'This customer has not been asked for any reviews.' => 'This customer has not been asked for any reviews.',
+    'Showing the {count} most recent of {total} reviews.' => 'Showing the {count} most recent of {total} reviews.',
 
     // Settings
     'Order Status to review' => 'Order Status to review',

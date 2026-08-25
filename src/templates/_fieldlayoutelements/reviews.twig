@@ -1,0 +1,136 @@
+{# Read-only review list rendered by the field layout UI elements in src/fieldlayoutelements/.
+
+   The columns are chosen by the UI element, not by this template, so one markup file covers the
+   product, order and user panels. See BaseReviewsUiElement::columns() for the recognised names. #}
+
+{% css %}
+    /* Layout only. The table itself uses Craft's own `data` styling so it follows the control
+       panel through theme changes. */
+    .pr-reviews-table {
+        overflow-x: auto;
+    }
+
+    .pr-reviews-table .pr-reviews-comment {
+        min-width: 200px;
+        max-width: 420px;
+    }
+
+    .pr-reviews-table .pr-reviews-rating {
+        white-space: nowrap;
+    }
+{% endcss %}
+
+{# Keyed off the model's own constants rather than repeated literals, so a renamed status shows up
+   here as a Twig error instead of a silently unlabelled column. #}
+{% set liveStatus = constant('aodihis\\productreview\\models\\Review::STATUS_LIVE') %}
+
+{% set statusLabels = {
+    (constant('aodihis\\productreview\\models\\Review::STATUS_PENDING')): "Pending"|t('product-review'),
+    (liveStatus): "Live"|t('product-review'),
+    (constant('aodihis\\productreview\\models\\Review::STATUS_EXPIRED')): "Expired"|t('product-review'),
+} %}
+
+<div class="pr-reviews">
+    <h2>{{ heading }}</h2>
+
+    {% if reviews is empty %}
+        <p class="light">{{ emptyMessage }}</p>
+    {% else %}
+        <div class="pr-reviews-table">
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        {% if 'product' in columns %}<th scope="col">{{ "Product"|t('product-review') }}</th>{% endif %}
+                        {% if 'reviewer' in columns %}<th scope="col">{{ "Reviewer"|t('product-review') }}</th>{% endif %}
+                        {% if 'rating' in columns %}<th scope="col">{{ "Rating"|t('product-review') }}</th>{% endif %}
+                        {% if 'comment' in columns %}<th scope="col">{{ "Comment"|t('product-review') }}</th>{% endif %}
+                        {% if 'status' in columns %}<th scope="col">{{ "Status"|t('product-review') }}</th>{% endif %}
+                        {% if 'date' in columns %}<th scope="col">{{ "Date"|t('product-review') }}</th>{% endif %}
+                        <th scope="col"><span class="visually-hidden">{{ "Actions"|t('product-review') }}</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                        <tr>
+                            {% if 'product' in columns %}
+                                {# Both the product and the reviewer can be null while the review row
+                                   survives: a soft-deleted element sits in the trash until garbage
+                                   collection, so the foreign key has not cascaded yet. #}
+                                <td>
+                                    {% if review.product %}
+                                        {{ elementChip(review.product) }}
+                                    {% else %}
+                                        <span class="light">{{ "Removed product"|t('product-review') }}</span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+
+                            {% if 'reviewer' in columns %}
+                                <td>
+                                    {% if review.reviewer %}
+                                        {{ elementChip(review.reviewer) }}
+                                    {% else %}
+                                        <span class="light">{{ "Deleted user"|t('product-review') }}</span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+
+                            {% if 'rating' in columns %}
+                                <td class="pr-reviews-rating">
+                                    {# Guarded: a Twig range counts down, so `1..0` yields [1, 0] and
+                                       would draw two stars for a review with no rating. #}
+                                    {% if review.rating %}
+                                        {% for i in 1..review.rating %}&starf;{% endfor %}
+                                        <span class="visually-hidden">{{ review.rating }}</span>
+                                    {% else %}
+                                        <span class="light">{{ "No rating"|t('product-review') }}</span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+
+                            {% if 'comment' in columns %}
+                                {# renderComment() purifies and returns Markup, so the stored HTML is
+                                   rendered rather than escaped, without needing |raw here. #}
+                                <td class="pr-reviews-comment">
+                                    {% if review.renderComment() %}
+                                        {{ review.renderComment() }}
+                                    {% else %}
+                                        <span class="light">{{ "No feedback"|t('product-review') }}</span>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+
+                            {% if 'status' in columns %}
+                                <td>
+                                    <span class="status {{ review.status }}"></span>
+                                    {{ statusLabels[review.status] ?? review.status }}
+                                </td>
+                            {% endif %}
+
+                            {% if 'date' in columns %}
+                                <td>{{ review.dateCreated ? review.dateCreated|datetime('short') : '' }}</td>
+                            {% endif %}
+
+                            <td class="thin">
+                                {# Only live reviews have a detail page: the view action looks reviews
+                                   up with the live status, so a link for a pending row would 404. #}
+                                {% if review.status == liveStatus %}
+                                    <a href="{{ review.cpViewUrl }}">{{ "View"|t('product-review') }}</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total > reviews|length %}
+            <p class="light">
+                {{ "Showing the {count} most recent of {total} reviews."|t('product-review', {
+                    count: reviews|length,
+                    total: total,
+                }) }}
+            </p>
+        {% endif %}
+    {% endif %}
+</div>

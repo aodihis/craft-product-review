@@ -99,6 +99,47 @@ Plugin::getInstance()->getReviews()->saveReview($review);
 Note that `saveReview()` sanitizes the comment before storing it, so anything you pass through it is
 cleaned on the way in.
 
+## The field layout UI elements
+
+The three review panels described in [Control panel](control-panel.md) are field layout UI elements
+in `aodihis\productreview\fieldlayoutelements`:
+
+| Class | Element type | Reviews it looks up |
+| --- | --- | --- |
+| `ProductReviews` | `craft\commerce\elements\Product` | `productId`, live only |
+| `OrderReviews` | `craft\commerce\elements\Order` | `orderId`, any status |
+| `UserReviews` | `craft\elements\User` | `reviewerId`, any status |
+
+All three extend `BaseReviewsUiElement`, which handles the guards and the rendering. A subclass
+supplies four things: the element type it belongs to, the review criteria for a given element, the
+columns to render, and the empty-state message.
+
+`Plugin::registerFieldLayoutUiElements()` decides which layouts are offered which element, using
+`FieldLayout::EVENT_DEFINE_UI_ELEMENTS` and the layout's `type`. To add a panel of your own, to a
+layout the plugin does not cover or with different criteria, extend the base class and register it
+the same way:
+
+```php
+use aodihis\productreview\fieldlayoutelements\BaseReviewsUiElement;
+use craft\base\ElementInterface;
+use craft\events\DefineFieldLayoutElementsEvent;
+use craft\models\FieldLayout;
+use yii\base\Event;
+
+Event::on(
+    FieldLayout::class,
+    FieldLayout::EVENT_DEFINE_UI_ELEMENTS,
+    function(DefineFieldLayoutElementsEvent $event) {
+        if ($event->sender->type === MyElement::class) {
+            $event->elements[] = MyReviewsPanel::class;
+        }
+    }
+);
+```
+
+Rendering is gated on the `View product reviews` permission, so a panel returns nothing for a user
+who lacks it rather than showing an empty table.
+
 ## Overriding the templates
 
 The control panel templates live in `src/templates` inside the plugin. Craft does not support
