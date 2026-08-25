@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Rebuilt the reviews list filters using Craft’s own element selectors, so they match the rest of the control panel.
 - Added an icon for the Product Review section in the control panel navigation.
 - Fixed a duplicate variant being recorded when an order contained the same variant on more than one line item.
 - Fixed the control panel showing two stars for a review with no rating.
