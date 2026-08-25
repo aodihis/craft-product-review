@@ -127,11 +127,15 @@ class Review extends Model
     }
 
     /**
-     * Whether this review has been edited as many times as the settings allow.
+     * Whether this review has been written as many times as the settings allow.
+     *
+     * `updateCount` counts the first submission as well as later edits, so `maxReviewLimit` is the
+     * total number of times a customer may write the review: at the default of 1, submitting once
+     * locks it. The comparison is `>=` — with `>` a limit of 1 allowed two writes.
      */
     public function getHasReachedEditLimit(): bool
     {
-        return $this->updateCount > Plugin::getInstance()->getSettings()->maxReviewLimit;
+        return $this->updateCount >= Plugin::getInstance()->getSettings()->maxReviewLimit;
     }
 
     public function getStatus(): string

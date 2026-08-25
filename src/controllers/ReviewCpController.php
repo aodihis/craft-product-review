@@ -158,7 +158,10 @@ class ReviewCpController extends Controller
                     'cpEditUrl' => $product?->getCpEditUrl() ?: '',
                 ],
                 'rating' => $review->rating,
-                'comment' => $review->comment ?: Craft::t('product-review', 'No feedback'),
+                // Plain text, not the stored HTML: the column truncates and the table writes it
+                // through innerHTML, so markup would either be escaped into visible tags or sliced
+                // mid-element. The JS escapes this again before rendering.
+                'comment' => $review->getPlainComment() ?: Craft::t('product-review', 'No feedback'),
                 'reviewer' => [
                     // Guest customers have neither a username nor a name, so fall back to the
                     // email — otherwise their reviews render with a blank author.

@@ -10,6 +10,8 @@
 - Fixed a potential XSS issue when rendering review comments in the control panel.
 - Review comments are now sanitized when saved, in addition to when they are rendered.
 - Added `review.renderComment()`, which renders a comment as sanitized HTML without needing `|raw`.
+- Fixed the review edit limit being off by one, which allowed one more submission than configured.
+- The control panel reviews table now shows comments as plain text instead of their stored markup.
 - Added `review.plainComment` (`getPlainComment()`) for rendering a comment outside HTML, such as in an export or email.
 - Fixed review updates not being restricted to the customer who owns the review.
 - Fixed the review window being applied backwards, which expired new reviews and reopened old ones.
