@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added an icon for the Product Review section in the control panel navigation.
 - Fixed a duplicate variant being recorded when an order contained the same variant on more than one line item.
 - Fixed the control panel showing two stars for a review with no rating.
 - Removed the unused review table asset bundle and Twig variable class, neither of which was ever registered.
