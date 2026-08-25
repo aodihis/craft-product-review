@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24">
-  <path fill="#E5A00D" d="M12,2 L14.47,8.60 L21.51,8.91 L16.00,13.30 L17.88,20.09 L12,16.20 L6.12,20.09 L8.01,13.30 L2.49,8.91 L9.53,8.60 Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 100 100">
+  <!-- Review card. Square corners, no background, so it sits on whatever surface Craft draws it on. -->
+  <rect x="8" y="6" width="84" height="88" fill="#F7F1E8"/>
+
+  <!-- title line -->
+  <rect x="18" y="19" width="64" height="9" rx="2" fill="#A0724C"/>
+
+  <!-- rating -->
+  <g fill="#A0724C" stroke="#4F3826" stroke-width="2.4" stroke-linejoin="round">
+    <path d="M30,39.5 L32.35,45.76 L39.04,46.06 L33.80,50.24 L35.58,56.69 L30,53 L24.42,56.69 L26.20,50.24 L20.96,46.06 L27.65,45.76 Z"/>
+    <path d="M50,39.5 L52.35,45.76 L59.04,46.06 L53.80,50.24 L55.58,56.69 L50,53 L44.42,56.69 L46.20,50.24 L40.96,46.06 L47.65,45.76 Z"/>
+    <path d="M70,39.5 L72.35,45.76 L79.04,46.06 L73.80,50.24 L75.58,56.69 L70,53 L64.42,56.69 L66.20,50.24 L60.96,46.06 L67.65,45.76 Z"/>
+  </g>
+
+  <!-- body lines -->
+  <rect x="18" y="68" width="64" height="9" rx="2" fill="#5A3E2B"/>
+  <rect x="18" y="81" width="64" height="9" rx="2" fill="#4A3223"/>
 </svg>
