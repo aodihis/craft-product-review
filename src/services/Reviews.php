@@ -13,10 +13,11 @@ use craft\commerce\elements\Order;
 use craft\commerce\elements\Variant;
 use craft\db\Query;
 use craft\helpers\DateTimeHelper;
+use craft\helpers\Db;
+use DateTime;
 use Exception;
 use RuntimeException;
 use yii\base\InvalidConfigException;
-use yii\db\Expression;
 
 class Reviews extends Component
 {
@@ -36,11 +37,7 @@ class Reviews extends Component
     public function getReviews(array $criteria = [], string $sort = 'dateCreated DESC', int $limit = null, int $offset = 0): array
     {
         $query = $this->_buildReviewQuery($criteria, $sort, $limit, $offset);
-        $reviews = $query->all();
-        foreach ($reviews as &$review) {
-            $review = $this->_buildReviewModel($review);
-        }
-        return $reviews;
+        return $this->_buildReviewModels($query->all());
     }
 
     /**
@@ -54,7 +51,7 @@ class Reviews extends Component
         if (!$record) {
             return null;
         }
-        return $this->_buildReviewModel($record);
+        return $this->_buildReviewModels([$record])[0];
     }
 
     public function getTotalReviews(array $criteria): int
@@ -230,25 +227,69 @@ class Reviews extends Component
 
     private function _buildQuery(): Query
     {
+        // Variant IDs are loaded separately rather than aggregated here. GROUP_CONCAT() is
+        // MySQL-only (PostgreSQL spells it STRING_AGG), and dropping the join also lets
+        // count() run without wrapping the query in a subquery.
         return (new Query())
-            ->select([
-                'reviews.*',
-                'GROUP_CONCAT(`variantId` ORDER BY variants.id) as variantIds',
-            ])
+            ->select(['reviews.*'])
             ->orderBy('reviews.id')
-            ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
-            ->leftJoin(Table::PRODUCT_REVIEW_VARIANTS . ' variants', '[[variants.reviewId]]=[[reviews.id]]')
-            ->groupBy(['reviews.id']);
+            ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews']);
     }
 
     /**
+     * Builds review models from raw rows, resolving every row's variant IDs in one query.
+     *
+     * @param array[] $records
+     * @return ModelsReview[]
      * @throws InvalidConfigException
      */
-    private function _buildReviewModel(array $record): ModelsReview
+    private function _buildReviewModels(array $records): array
     {
-        $record['variantIds'] = array_map(static function ($val) {
-            return (int) $val;
-        }, explode(',', $record['variantIds']));
+        $variantIds = $this->_variantIdsByReviewId(array_column($records, 'id'));
+
+        return array_map(
+            fn(array $record): ModelsReview => $this->_buildReviewModel(
+                $record,
+                $variantIds[(int)$record['id']] ?? []
+            ),
+            $records
+        );
+    }
+
+    /**
+     * Returns variant IDs for the given reviews, indexed by review ID.
+     *
+     * @param int[]|string[] $reviewIds
+     * @return array<int, int[]>
+     */
+    private function _variantIdsByReviewId(array $reviewIds): array
+    {
+        if (!$reviewIds) {
+            return [];
+        }
+
+        $rows = (new Query())
+            ->select(['reviewId', 'variantId'])
+            ->from([Table::PRODUCT_REVIEW_VARIANTS])
+            ->where(['reviewId' => $reviewIds])
+            ->orderBy(['id' => SORT_ASC])
+            ->all();
+
+        $variantIds = [];
+        foreach ($rows as $row) {
+            $variantIds[(int)$row['reviewId']][] = (int)$row['variantId'];
+        }
+
+        return $variantIds;
+    }
+
+    /**
+     * @param int[] $variantIds
+     * @throws InvalidConfigException
+     */
+    private function _buildReviewModel(array $record, array $variantIds): ModelsReview
+    {
+        $record['variantIds'] = $variantIds;
         $comment = $record['comment'];
         $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $record]]);
         $review->comment = $comment;
@@ -272,7 +313,13 @@ class Reviews extends Component
                 if ($value === 'pending') {
                     $query->andWhere(['updateCount' => 0]);
                     if ($maxDaysToReview) {
-                        $query->andWhere(new Expression("NOW() < DATE_ADD(reviews.dateCreated, INTERVAL $maxDaysToReview DAY)"));
+                        // `now < dateCreated + maxDays` rearranged to `dateCreated > now - maxDays`,
+                        // so the cutoff is computed in PHP and bound as a parameter. That avoids
+                        // MySQL-only DATE_ADD()/INTERVAL, avoids interpolating the setting into raw
+                        // SQL, and avoids depending on the database session's clock — NOW() follows
+                        // the DB host's time zone, while Craft stores dateCreated in UTC.
+                        $cutoff = (new DateTime('now'))->modify("- $maxDaysToReview day");
+                        $query->andWhere(['>', 'reviews.dateCreated', Db::prepareDateForDb($cutoff)]);
                     }
                     continue;
                 }
