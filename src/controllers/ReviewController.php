@@ -44,14 +44,16 @@ class ReviewController extends Controller
             throw new NotFoundHttpException(Craft::t('product-review', "Unable to find review with id: $id"));
         }
 
-        // These must throw rather than collect errors: validate() below clears the error
-        // bag, so anything recorded here would be discarded before it was ever checked.
+        // This must throw rather than collect an error: validate() below clears the error bag,
+        // so anything recorded here would be discarded before it was ever checked.
         if ((int)$review->reviewerId !== (int)$currentUser->id) {
             throw new ForbiddenHttpException(Craft::t('product-review', 'You are not permitted to update this review.'));
         }
 
-        if (!$review->getIsEditable()) {
-            throw new BadRequestHttpException(Craft::t('product-review', 'This item can no longer be reviewed.'));
+        // Checked before the increment, so the limit is compared against the number of edits
+        // already made. The review window is handled by the model's validation rules instead.
+        if ($review->getHasReachedEditLimit()) {
+            throw new BadRequestHttpException(Craft::t('product-review', 'This review has already been edited the maximum number of times.'));
         }
 
         ++$review->updateCount;

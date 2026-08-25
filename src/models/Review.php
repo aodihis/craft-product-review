@@ -3,6 +3,7 @@
 namespace aodihis\productreview\models;
 
 use aodihis\productreview\Plugin;
+use Craft;
 use craft\base\Model;
 use craft\commerce\base\Purchasable;
 use craft\commerce\elements\Product;
@@ -18,6 +19,7 @@ use DateTime;
  * @property-read string $status
  * @property-read boolean $isEditable
  * @property-read boolean $isPastReviewWindow
+ * @property-read boolean $hasReachedEditLimit
  */
 class Review extends Model
 {
@@ -112,15 +114,15 @@ class Review extends Model
 
     public function getIsEditable(): bool
     {
-        if ($this->getIsPastReviewWindow()) {
-            return false;
-        }
+        return !$this->getIsPastReviewWindow() && !$this->getHasReachedEditLimit();
+    }
 
-        if ($this->updateCount > Plugin::getInstance()->getSettings()->maxReviewLimit) {
-            return false;
-        }
-
-        return true;
+    /**
+     * Whether this review has been edited as many times as the settings allow.
+     */
+    public function getHasReachedEditLimit(): bool
+    {
+        return $this->updateCount > Plugin::getInstance()->getSettings()->maxReviewLimit;
     }
 
     public function getStatus(): string
@@ -164,6 +166,24 @@ class Review extends Model
         return $deadline <= new DateTime('now');
     }
 
+    /**
+     * Validates that the review window is still open.
+     *
+     * This lives in the rules rather than the controller so that a closed window fails like
+     * any other validation error — the form re-renders with a message instead of an error
+     * page — and so the check also applies on the service path, where saveReview() validates.
+     *
+     * The edit limit from getIsEditable() is deliberately *not* checked here. The controller
+     * increments updateCount before validating, so evaluating the limit at this point would
+     * compare the post-increment value and silently tighten the allowance by one. It stays a
+     * precondition, checked before the increment.
+     */
+    public function validateReviewWindow(string $attribute): void
+    {
+        if ($this->getIsPastReviewWindow()) {
+            $this->addError($attribute, Craft::t('product-review', 'This item can no longer be reviewed.'));
+        }
+    }
 
     public function getCpViewUrl(): string
     {
@@ -179,6 +199,7 @@ class Review extends Model
         $rules[] = ['rating', 'integer', 'min' => 1, 'max' => $maxRating, 'when' => function ($model) {
             return $model->updateCount > 0;
         }];
+        $rules[] = ['updateCount', 'validateReviewWindow'];
         return $rules;
     }
 
