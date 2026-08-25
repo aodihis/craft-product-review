@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+> **⚠ Action required after updating:** this release adds a “View product reviews” permission that is
+> now required to open the Product Review section and use its search endpoints. Admins are unaffected,
+> but **any existing non-admin user or group that could previously see reviews will lose access until
+> you grant them this permission** under Settings → Users → *(group)* → Permissions.
+
 - Fixed a potential XSS issue when rendering review comments in the control panel.
 - Fixed review updates not being restricted to the customer who owns the review.
 - Fixed the review window being applied backwards, which expired new reviews and reopened old ones.

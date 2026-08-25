@@ -121,6 +121,27 @@ Add entries under the topmost version heading, matching the existing
 `# Release Notes for Commerce Review` / `## <version>` format and the `- ` bullet style already in
 the file.
 
+### The one exception: changes that need action after updating
+
+If a change means an existing site **must** do something after updating — grant a new permission,
+run a migration, update a template — add a bold blockquote note directly under the version heading,
+above the bullets, in addition to the one-line entry:
+
+```markdown
+## Unreleased
+
+> **⚠ Action required after updating:** …what breaks, who it affects, and what to do about it.
+
+- Added a “View product reviews” permission, now required for the control panel section.
+```
+
+Bold inside a blockquote is used deliberately: it renders correctly on GitHub, in the Plugin Store,
+and in Craft's own update screens. Craft's admonition syntax (`> {warning}` in Craft 3,
+`> [!WARNING]` in Craft 4+) could not be confirmed for Craft 5 from the vendored changelogs, since
+they are `export-ignore`d out of Composer installs.
+
+Keep the note to what a site owner must *do*. The reasoning belongs in the commit message.
+
 ## Watch out for
 
 There is a standing audit in `issues.md` (git-excluded, local only) covering known bugs — a broken
