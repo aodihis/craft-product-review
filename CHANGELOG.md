@@ -9,6 +9,7 @@
 
 - Fixed a potential XSS issue when rendering review comments in the control panel.
 - Review comments are now sanitized when saved, in addition to when they are rendered.
+- Added full documentation under `docs/`, linked from the readme.
 - Added `review.renderComment()`, which renders a comment as sanitized HTML without needing `|raw`.
 - Fixed a review staying editable after it had already been submitted.
 - The control panel reviews table now shows comments as plain text instead of their stored markup.
