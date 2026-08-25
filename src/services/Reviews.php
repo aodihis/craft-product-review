@@ -71,7 +71,12 @@ class Reviews extends Component
      */
     public function getProductReviews(int $productId, int $rating = null, string $sort = 'dateCreated DESC'): array
     {
-        $criteria = ['productId' => $productId];
+        // Only submitted reviews. Every purchase creates an empty row up front, so without this
+        // a product's review list includes placeholders the customer never filled in.
+        $criteria = [
+            'status' => ModelsReview::STATUS_LIVE,
+            'productId' => $productId,
+        ];
         if ($rating) {
             $criteria['rating'] = $rating;
         }
@@ -80,15 +85,22 @@ class Reviews extends Component
 
     public function getRatingCountInList(int $productId): array
     {
-        $reviewCount = (new Query())
+        $query = (new Query())
             ->select([
                 'COUNT(id) as total',
                 'rating'
             ])
             ->from([Table::PRODUCT_REVIEW_REVIEWS . ' reviews'])
             ->where(['productId' => $productId])
+            ->andWhere(['not', ['rating' => null]])
             ->orderBy('reviews.rating DESC')
-            ->groupBy(['reviews.rating'])->all();
+            ->groupBy(['reviews.rating']);
+
+        // Same restriction as getProductReviews(), via the shared definition of "live", so an
+        // un-submitted review cannot show up as a rating bucket of its own.
+        $this->_applyStatusCondition($query, ModelsReview::STATUS_LIVE);
+
+        $reviewCount = $query->all();
         return array_map(static function ($rows){
             return [
                 'total' => $rows['total'],
