@@ -38,19 +38,7 @@ when the order reached the status above.
 Set it to `0` to leave the window open forever.
 
 Once the window closes, the review disappears from `getWaitingToReviewItems()` and the customer can
-no longer submit it. The row stays in the database with a status of `expired`.
-
-## Settings not exposed in the control panel
-
-Two values are currently fixed in code and cannot be changed from the control panel.
-
-| Value | Fixed at | Effect |
-| --- | --- | --- |
-| Maximum rating | `5` | Ratings are validated as 1 to 5 |
-| Edits after submitting | none allowed | A review is final once submitted |
-
-If you need a different maximum rating, that is a code change in
-`src/models/Settings.php` rather than a setting. Making both configurable is planned.
+no longer submit it. The review remains, with a status of `expired`.
 
 ## Setting values in config files
 

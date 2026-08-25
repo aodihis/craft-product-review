@@ -129,5 +129,3 @@ Worth knowing before planning a moderation workflow:
 - Reviews cannot be edited, hidden, or deleted from the control panel
 - There is no approval queue, submitted reviews are live immediately
 - There is no export
-
-Deleting a review currently means deleting the row from the `prorev_reviews` table directly.

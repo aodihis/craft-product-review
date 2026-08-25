@@ -20,7 +20,7 @@ is safe to loop over directly on a public page.
 | Argument | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `rating` | int, null | `null` | Only reviews with this rating |
-| `sort` | string | `'dateCreated DESC'` | Any column on the reviews table |
+| `sort` | string | `'dateCreated DESC'` | `dateCreated`, `dateUpdated` or `rating`, with `ASC` or `DESC` |
 
 ```twig
 {# only five star reviews, oldest first #}
@@ -130,7 +130,6 @@ Given a `review` from any of the methods above.
 | `review.productId` | int | |
 | `review.orderId` | int | |
 | `review.reviewerId` | int | |
-| `review.updateCount` | int | How many times it has been written |
 | `review.dateCreated` | DateTime | When the review was created, which starts the review window |
 | `review.dateUpdated` | DateTime | |
 
@@ -147,7 +146,6 @@ Given a `review` from any of the methods above.
 | Property | Type | Notes |
 | --- | --- | --- |
 | `review.status` | string | `pending`, `live`, or `expired` |
-| `review.isEditable` | bool | Whether the customer may write to it now |
 | `review.isPastReviewWindow` | bool | Whether the review window has closed |
 | `review.cpViewUrl` | string | Link to the review in the control panel |
 

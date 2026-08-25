@@ -4,7 +4,7 @@
 
 - Added review panels that can be added to product, order and user field layouts.
 - Removed the reviewer and product search endpoints, which the rebuilt filters no longer use.
-- Removed the events and extending documentation page.
+- Reduced the documentation to what a site integrating the plugin needs, dropping internals and unreleased behaviour.
 - Rebuilt the reviews list filters using Craft’s own element selectors, so they match the rest of the control panel.
 - Added an icon for the Product Review section in the control panel navigation.
 - Fixed a duplicate variant being recorded when an order contained the same variant on more than one line item.

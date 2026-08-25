@@ -98,14 +98,6 @@ suited to templates.
 
 `aodihis\productreview\models\Review`
 
-### Constants
-
-| Constant | Value |
-| --- | --- |
-| `Review::STATUS_PENDING` | `'pending'` |
-| `Review::STATUS_LIVE` | `'live'` |
-| `Review::STATUS_EXPIRED` | `'expired'` |
-
 ### Properties
 
 | Property | Type |
@@ -117,10 +109,8 @@ suited to templates.
 | `$variantIds` | `?int[]` |
 | `$rating` | `?int` |
 | `$comment` | `?string` |
-| `$updateCount` | `int` |
 | `$dateCreated` | `?DateTime` |
 | `$dateUpdated` | `?DateTime` |
-| `$uid` | `?string` |
 
 ### Methods
 
@@ -129,57 +119,8 @@ suited to templates.
 | `getProduct()` | `?Product` | `null` if deleted |
 | `getReviewer()` | `?User` | `null` if deleted |
 | `getVariants()` | `Variant[]` | |
-| `getStatus()` | `string` | One of the status constants |
-| `getIsEditable()` | `bool` | |
+| `getStatus()` | `string` | `pending`, `live` or `expired` |
 | `getIsPastReviewWindow()` | `bool` | |
-| `getHasReachedEditLimit()` | `bool` | |
 | `renderComment()` | `?Markup` | Sanitized HTML, safe to output directly |
 | `getPlainComment()` | `?string` | Tags stripped and entities decoded, for non-HTML output |
 | `getCpViewUrl()` | `string` | |
-
-### Validation rules
-
-`productId`, `orderId`, `reviewerId`, and `variantIds` are required. `rating` must be a whole number
-between 1 and the configured maximum, checked only once a rating has been set. Saving is also
-refused when the review window has closed.
-
-## Settings model
-
-`aodihis\productreview\models\Settings`
-
-| Property | Type | Default |
-| --- | --- | --- |
-| `$orderStatusToReview` | `?string` | `null` |
-| `$maxDaysToReview` | `int` | `30` |
-
-| Static | Type | Default |
-| --- | --- | --- |
-| `Settings::$defaultMaxRating` | `int` | `5` |
-
-```php
-$settings = Plugin::getInstance()->getSettings();
-```
-
-## Permission constant
-
-```php
-use aodihis\productreview\Plugin;
-
-if (Craft::$app->getUser()->checkPermission(Plugin::PERMISSION_VIEW_REVIEWS)) {
-    // ...
-}
-```
-
-`Plugin::PERMISSION_VIEW_REVIEWS` is `'productReview-viewReviews'`.
-
-## Database tables
-
-`aodihis\productreview\db\Table`
-
-| Constant | Table |
-| --- | --- |
-| `Table::PRODUCT_REVIEW_REVIEWS` | `{{%prorev_reviews}}` |
-| `Table::PRODUCT_REVIEW_VARIANTS` | `{{%prorev_reviews_variants}}` |
-
-Query them directly only for reporting. Writes should go through `saveReview()`, which handles
-sanitizing and the variant rows.

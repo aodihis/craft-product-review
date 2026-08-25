@@ -242,6 +242,32 @@ Update the docs when a change adds or alters:
   `docs/php-api.md` list these individually, so a new one needs a new entry
 - **behaviour someone might already depend on**, even when no signature changed
 
+### What the docs are, and are not
+
+`docs/` is written for a **developer integrating the plugin into their site**. It is not a manual for
+working on the plugin itself. Everything in it should help someone answer "how do I use this on my
+store", and nothing should require them to understand how the plugin is built.
+
+**Never document:**
+
+- **Anything unreleased or unfinished.** No planned settings, no roadmap, no "this is fixed in code
+  for now, making it configurable is planned", and no template examples using an API that is still
+  being decided. Documenting a half-finished feature invites sites to build on it, and then it
+  cannot be changed. If it is not shipped and settled, it does not exist as far as `docs/` is
+  concerned.
+- **Database tables, columns, or SQL.** No table names, no schema, no diagnostic queries. Storage is
+  an implementation detail and naming it turns it into something people depend on.
+- **Validation rules, the settings model, permission constants, or any other internal class
+  surface.** A site owner grants the "View product reviews" permission through the control panel, so
+  document that. They never need `Plugin::PERMISSION_VIEW_REVIEWS`.
+- **Internal counters and derived state that back an unfinished feature**, such as `updateCount` and
+  `isEditable`. These change meaning as the feature settles.
+- **Craft's own events and APIs.** Craft documents those. Repeating them here means maintaining a
+  copy that goes stale.
+
+Prefer plain language over internal vocabulary. "The review remains, with a status of expired" says
+the same thing as "the row stays in the database", without teaching anyone the schema.
+
 Two rules that are easy to miss:
 
 - **Rewrite what a change made wrong, do not only append.** Rebuilding the control panel filters

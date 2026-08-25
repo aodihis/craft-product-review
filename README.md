@@ -20,7 +20,6 @@ rating and an optional comment, and you read the results in the control panel.
 | [Displaying reviews](docs/displaying-reviews.md) | Product pages, stars, breakdowns, structured data |
 | [Control panel](docs/control-panel.md) | Finding the section, filters, permissions |
 | [PHP API reference](docs/php-api.md) | Services, models, constants |
-| [Troubleshooting](docs/troubleshooting.md) | When reviews do not appear |
 
 ## Requirements
 

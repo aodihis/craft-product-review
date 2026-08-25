@@ -28,15 +28,9 @@ composer require aodihis/product-review
 
 ## What installing creates
 
-Two database tables:
-
-| Table | Holds |
-| --- | --- |
-| `prorev_reviews` | One row per product per order, with the rating and comment |
-| `prorev_reviews_variants` | Which variants of that product the customer actually bought |
-
-Reviews are plain records rather than Craft elements. They do not appear in element queries, they
-have no field layout, and you cannot add custom fields to them.
+Reviews are not Craft elements. They do not appear in element queries, they have no field layout,
+and you cannot add custom fields to them. Reach them through the methods in the
+[Twig reference](twig-reference.md) instead.
 
 ## After installing
 
@@ -49,5 +43,5 @@ The plugin does nothing until you choose an order status in the settings. See
 ./craft plugin/uninstall product-review
 ```
 
-This drops both tables. **All review data is deleted and cannot be recovered.** Take a database
-backup first if the reviews matter.
+**All review data is deleted and cannot be recovered.** Take a backup first if the reviews
+matter.

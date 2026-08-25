@@ -14,7 +14,6 @@ with a rating and an optional comment, and you moderate the results from the con
 6. [Displaying reviews on a product page](displaying-reviews.md)
 7. [Control panel](control-panel.md)
 8. [PHP API reference](php-api.md)
-9. [Troubleshooting](troubleshooting.md)
 
 ## Quick start
 
