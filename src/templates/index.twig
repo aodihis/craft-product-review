@@ -153,10 +153,18 @@ var selectedProductId = null;
 var selectedReviewerId = null;
 var selectedRating = null;
 
+// VueAdminTable writes cell content via innerHTML, so anything interpolated below has to be
+// escaped. cpEditUrl is empty when the element has been deleted but the review row survives —
+// render a plain label in that case rather than a link to nowhere.
+function reviewLink(url, label) {
+    var text = Craft.escapeHtml(label || '');
+    return url ? `<a href="${Craft.escapeHtml(url)}">${text}</a>` : text;
+}
+
 var columns = [
     { name: 'product', title: Craft.t('app', 'Product'), callback: function(product) {
             if (product) {
-                return `<a href="${product.cpEditUrl}">${product.title}</a>`;
+                return reviewLink(product.cpEditUrl, product.title);
             }
             return '';
         } },
@@ -173,7 +181,7 @@ var columns = [
     } },
     { name: 'reviewer', title: Craft.t('app', 'Reviewer'), callback: function(reviewer) {
             if (reviewer) {
-                return `<a href="${reviewer.cpEditUrl}">${reviewer.name}</a>`;
+                return reviewLink(reviewer.cpEditUrl, reviewer.name);
             }
             return '';
         } },
@@ -213,19 +221,15 @@ function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, ty
     data.forEach(item => {
         const listItem = document.createElement("div");
         listItem.classList.add("dropdown-item");
-        if (type === 'reviewer') {
-            listItem.textContent = item.fullName ?  item.fullName : item.email;
-        } else {
-            listItem.textContent = item.title;
-        }
+        // textContent, so a label is never parsed as markup.
+        listItem.textContent = item.label;
 
         listItem.setAttribute("data-id", item.id);
         listItem.addEventListener("click", function() {
+            inputSelector.value = item.label;
             if (type === 'reviewer') {
-                inputSelector.value = item.fullName ?  item.fullName : item.email;
                 selectedReviewerId = item.id
             } else {
-                inputSelector.value = item.title;
                 selectedProductId = item.id
             }
             inputSelector.disabled = true;
