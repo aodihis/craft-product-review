@@ -106,12 +106,20 @@ level 5 reports 8 — treat new findings as signal, not the existing baseline.
     `Craft.escapeHtml()` in control panel JavaScript, where `VueAdminTable` writes column-callback
     output through `innerHTML` and truncates, so purified markup could be sliced mid-tag.
 
-  Note purifying stores HTML, so a bare `&` is saved as `&amp;`. That renders correctly as HTML, but
-  anything treating the comment as plain text (CSV export, email, `|striptags`) will see the entity.
-  Use `review.plainComment` for those — it strips the tags and decodes the entities. Because it
-  returns *decoded* text, never pair it with `|raw`: a comment stored as `&lt;script&gt;` comes back
-  as `<script>`. `{{ review.plainComment }}` is safe (Twig escapes it); for HTML output use
-  `{{ review.comment|purify }}`.
+  Prefer the model's accessors over sanitizing by hand at each call site:
+
+  | Context | Use |
+  | --- | --- |
+  | HTML, in a template | `{{ review.safeComment }}` — purifies and returns `Twig\Markup`, so no `|raw` is needed |
+  | Plain text (CSV, email, feeds) | `{{ review.plainComment }}` — strips tags *and* decodes entities |
+  | Control panel JavaScript | `Craft.escapeHtml(...)` — `VueAdminTable` truncates, then writes via `innerHTML` |
+
+  `plainComment` returns *decoded* text, so it must never be paired with `|raw`: a comment stored as
+  `&lt;script&gt;` comes back as `<script>`. Twig escapes it by default, which is what makes
+  `{{ review.plainComment }}` safe.
+
+  Note purifying stores HTML, so a bare `&` is saved as `&amp;` — correct as HTML, visible as an
+  entity anywhere the comment is treated as plain text, which is what `plainComment` is for.
 
 ## Always update the changelog
 

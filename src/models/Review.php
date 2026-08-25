@@ -10,8 +10,11 @@ use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
 use craft\commerce\services\Purchasables;
 use craft\elements\User;
+use craft\helpers\HtmlPurifier;
+use craft\helpers\Template;
 use craft\helpers\UrlHelper;
 use DateTime;
+use Twig\Markup;
 
 /**
  * @property-read User $reviewer
@@ -20,6 +23,7 @@ use DateTime;
  * @property-read boolean $isEditable
  * @property-read boolean $isPastReviewWindow
  * @property-read boolean $hasReachedEditLimit
+ * @property-read Markup|null $safeComment
  * @property-read string|null $plainComment
  */
 class Review extends Model
@@ -184,6 +188,30 @@ class Review extends Model
         if ($this->getIsPastReviewWindow()) {
             $this->addError($attribute, Craft::t('product-review', 'This item can no longer be reviewed.'));
         }
+    }
+
+    /**
+     * Returns the comment as HTML that is safe to output.
+     *
+     * This is the method to reach for when rendering a comment in a template. It runs the stored
+     * value through HTML Purifier and returns `Twig\Markup`, so Twig will not escape it and no
+     * `|raw` is needed at the call site:
+     *
+     * ```twig
+     * {{ review.safeComment }}
+     * ```
+     *
+     * Comments are already sanitized on save, but rows written before that was added are still
+     * raw, so this purifies again rather than trusting what is in the database. Purifying twice is
+     * harmless — the same configuration is used in both places.
+     */
+    public function getSafeComment(): ?Markup
+    {
+        if ($this->comment === null || trim($this->comment) === '') {
+            return null;
+        }
+
+        return Template::raw(HtmlPurifier::process($this->comment));
     }
 
     /**
