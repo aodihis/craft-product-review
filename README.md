@@ -19,7 +19,6 @@ rating and an optional comment, and you read the results in the control panel.
 | [Building a review form](docs/review-form.md) | Submitting a review, with working examples |
 | [Displaying reviews](docs/displaying-reviews.md) | Product pages, stars, breakdowns, structured data |
 | [Control panel](docs/control-panel.md) | Finding the section, filters, permissions |
-| [Events and extending](docs/extending.md) | Hooking in from your own module |
 | [PHP API reference](docs/php-api.md) | Services, models, constants |
 | [Troubleshooting](docs/troubleshooting.md) | When reviews do not appear |
 

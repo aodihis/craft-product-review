@@ -240,7 +240,6 @@ Update the docs when a change adds or alters:
 - a **setting** — the name, what it does, its default, or what happens at its edges
 - a **Twig method, behavior method, or service method** — `docs/twig-reference.md` and
   `docs/php-api.md` list these individually, so a new one needs a new entry
-- an **extension point**, in `docs/extending.md`
 - **behaviour someone might already depend on**, even when no signature changed
 
 Two rules that are easy to miss:
