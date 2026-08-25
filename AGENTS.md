@@ -108,6 +108,10 @@ level 5 reports 8 — treat new findings as signal, not the existing baseline.
 
   Note purifying stores HTML, so a bare `&` is saved as `&amp;`. That renders correctly as HTML, but
   anything treating the comment as plain text (CSV export, email, `|striptags`) will see the entity.
+  Use `review.plainComment` for those — it strips the tags and decodes the entities. Because it
+  returns *decoded* text, never pair it with `|raw`: a comment stored as `&lt;script&gt;` comes back
+  as `<script>`. `{{ review.plainComment }}` is safe (Twig escapes it); for HTML output use
+  `{{ review.comment|purify }}`.
 
 ## Always update the changelog
 

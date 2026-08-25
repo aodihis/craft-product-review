@@ -20,6 +20,7 @@ use DateTime;
  * @property-read boolean $isEditable
  * @property-read boolean $isPastReviewWindow
  * @property-read boolean $hasReachedEditLimit
+ * @property-read string|null $plainComment
  */
 class Review extends Model
 {
@@ -183,6 +184,33 @@ class Review extends Model
         if ($this->getIsPastReviewWindow()) {
             $this->addError($attribute, Craft::t('product-review', 'This item can no longer be reviewed.'));
         }
+    }
+
+    /**
+     * Returns the comment as plain text.
+     *
+     * Comments are stored as sanitized HTML, so a literal ampersand is held as `&amp;`. Twig's
+     * `|striptags` removes the markup but leaves entities encoded, which is wrong anywhere the
+     * comment is not being rendered as HTML — a CSV export, an email body, a plain-text feed.
+     * This strips the tags *and* decodes the entities.
+     *
+     * The result is decoded text, so it is **not** safe to emit as raw HTML: a comment stored as
+     * `&lt;script&gt;` comes back as `<script>`. Use it only in non-HTML contexts, or let Twig
+     * escape it — `{{ review.plainComment }}` is fine, `{{ review.plainComment|raw }}` is an XSS
+     * hole. For HTML output use `comment` with `|purify` instead.
+     */
+    public function getPlainComment(): ?string
+    {
+        if ($this->comment === null) {
+            return null;
+        }
+
+        // Block-level boundaries become spaces first, or "<p>a</p><p>b</p>" collapses to "ab".
+        // Inline tags are left to strip_tags() so "Great <b>shirt</b>!" keeps its punctuation.
+        $text = preg_replace('/<\/?(?:p|div|br|li|ul|ol|h[1-6]|blockquote)\b[^>]*>/i', ' ', $this->comment);
+        $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return trim(preg_replace('/\s+/', ' ', $text));
     }
 
     public function getCpViewUrl(): string
