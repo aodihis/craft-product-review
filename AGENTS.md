@@ -243,31 +243,15 @@ Update the docs when a change adds or alters:
   individually, so a new one needs a new entry
 - **behaviour someone might already depend on**, even when no signature changed
 
-### What the docs are, and are not
+### How to write them
 
-`docs/` is written for a **developer integrating the plugin into their site**. It is not a manual for
-working on the plugin itself. Everything in it should help someone answer "how do I use this on my
-store", and nothing should require them to understand how the plugin is built.
+**Read `.claude/skills/plugin-docs/SKILL.md` before writing or revising anything under `docs/`.** It
+carries the full style guide: the Verbb plugin docs are the model, the audience is a developer
+integrating the plugin rather than one working on it, and it lists what must never be documented.
 
-**Never document:**
-
-- **Anything unreleased or unfinished.** No planned settings, no roadmap, no "this is fixed in code
-  for now, making it configurable is planned", and no template examples using an API that is still
-  being decided. Documenting a half-finished feature invites sites to build on it, and then it
-  cannot be changed. If it is not shipped and settled, it does not exist as far as `docs/` is
-  concerned.
-- **Database tables, columns, or SQL.** No table names, no schema, no diagnostic queries. Storage is
-  an implementation detail and naming it turns it into something people depend on.
-- **Validation rules, the settings model, permission constants, or any other internal class
-  surface.** A site owner grants the "View product reviews" permission through the control panel, so
-  document that. They never need `Plugin::PERMISSION_VIEW_REVIEWS`.
-- **Internal counters and derived state that back an unfinished feature**, such as `updateCount` and
-  `isEditable`. These change meaning as the feature settles.
-- **Craft's own events and APIs.** Craft documents those. Repeating them here means maintaining a
-  copy that goes stale.
-
-Prefer plain language over internal vocabulary. "The review remains, with a status of expired" says
-the same thing as "the row stays in the database", without teaching anyone the schema.
+The short version of that last part, because it is the rule most often broken: no unreleased or
+unfinished behaviour, no databases or SQL, no internal class surface such as validation rules, the
+settings model or permission constants, and no re-documenting Craft's own events and APIs.
 
 Two rules that are easy to miss:
 
