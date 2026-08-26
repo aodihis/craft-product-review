@@ -26,30 +26,19 @@ Here is the list of properties and methods available on the review object. They 
 | `getReviewer()` | UserElement. Get the related user. Returns `null` if the customer was deleted. |
 | `getVariants()` | List of VariantElement. Get the list of reviewed variants. |
 | `renderComment()` | Markup. The comment, sanitized and safe to output directly. |
-| `plainComment` | String. The comment with tags stripped and entities decoded, for output that is not HTML. |
 
 ### Printing the comment
 
 The comment is written by a customer, so it must never be printed with `|raw`.
 
-Use `renderComment()` for HTML. It sanitizes the comment and returns markup Twig will not escape, so no `|raw` is needed.
+Use `renderComment()`. It sanitizes the comment and returns markup Twig will not escape, so no `|raw` is needed.
 
 ```twig
 <div>{{ review.renderComment() }}</div>
 ```
 
-Use `plainComment` anywhere that is not HTML, such as a meta tag or an email subject. It strips the tags and decodes the entities.
-
-```twig
-<meta name="description" content="{{ review.plainComment }}">
-```
-
-Both return `null` when there is no comment, so a fallback is easy.
+It returns `null` when there is no comment, so a fallback is easy.
 
 ```twig
 {{ review.renderComment() ?? 'No feedback given' }}
 ```
-
-{% hint style="warning" %}
-Do not pair `plainComment` with `|raw`. It returns decoded text, so `|raw` would reintroduce exactly the problem the sanitizing prevents.
-{% endhint %}

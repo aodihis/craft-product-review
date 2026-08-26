@@ -77,36 +77,31 @@
         </div>
 
         {% if 'comment' in columns %}
-            {# Measured against the plain text rather than the stored HTML, so the cap counts what a
-               reader actually sees, and so a cut can never land inside a tag. Both forms are
-               rendered up front: the short one is plain text, the full one is the purified HTML
-               from renderComment(), and the toggle in reviews.twig swaps which is shown. #}
-            {% set plain = review.plainComment %}
-
-            {% if plain %}
-                {% if plain|length > maxCommentLength %}
+            {# Treated as plain text. If a reviewer typed a tag it is shown as the characters they
+               typed, which is both honest and safe — Twig escapes it, so nothing runs. #}
+            {% if review.comment %}
+                {% if review.comment|length > maxCommentLength %}
                     {# Trimmed back to the last whole word, so the ellipsis does not appear
                        mid-word. Falls back to the hard cut for text with no spaces in range. #}
-                    {% set cut = plain|slice(0, maxCommentLength) %}
+                    {% set cut = review.comment|slice(0, maxCommentLength) %}
                     {% set atWord = cut|split(' ')|slice(0, -1)|join(' ')|trim %}
 
                     <div class="pr-review-comment" data-pr-comment>
                         <div class="pr-review-comment-short">{{ (atWord ?: cut) }}&hellip;</div>
-                        {# renderComment() purifies and returns Markup, so the stored HTML is
-                           rendered rather than escaped, without needing |raw here. #}
-                        <div class="pr-review-comment-full hidden">{{ review.renderComment() }}</div>
+                        <div class="pr-review-comment-full hidden">{{ review.comment }}</div>
                         <button type="button" class="pr-review-toggle"
                                 data-pr-toggle
                                 data-more="{{ "Show more"|t('product-review') }}"
                                 data-less="{{ "Show less"|t('product-review') }}">{{ "Show more"|t('product-review') }}</button>
                     </div>
                 {% else %}
-                    <div class="pr-review-comment">{{ review.renderComment() }}</div>
+                    <div class="pr-review-comment">{{ review.comment }}</div>
                 {% endif %}
             {% else %}
                 <p class="pr-review-comment light">{{ "No feedback"|t('product-review') }}</p>
             {% endif %}
         {% endif %}
+
     </article>
 {% endfor %}
 

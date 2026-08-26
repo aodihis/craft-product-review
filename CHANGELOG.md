@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Removed `review.plainComment`, which duplicated what `|striptags` already does. Use `review.renderComment()` to print a comment.
 - Added review panels that can be added to product, order and user field layouts.
 - Removed the reviewer and product search endpoints, which the rebuilt filters no longer use.
 - Reduced the documentation to what a site integrating the plugin needs, dropping internals and unreleased behaviour.
