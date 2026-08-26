@@ -16,13 +16,12 @@ use DateTime;
 use Twig\Markup;
 
 /**
- * @property-read User $reviewer
- * @property-read Product $product
+ * @property-read User|null $reviewer
+ * @property-read Product|null $product
  * @property-read string $status
  * @property-read boolean $isEditable
  * @property-read boolean $isPastReviewWindow
  * @property-read boolean $hasReachedEditLimit
- * @property-read string|null $plainComment
  * @method Markup|null renderComment()
  */
 class Review extends Model
@@ -242,33 +241,6 @@ class Review extends Model
         return $this->_rendered;
     }
 
-    /**
-     * Returns the comment as plain text.
-     *
-     * Comments are stored as sanitized HTML, so a literal ampersand is held as `&amp;`. Twig's
-     * `|striptags` removes the markup but leaves entities encoded, which is wrong anywhere the
-     * comment is not being rendered as HTML — a CSV export, an email body, a plain-text feed.
-     * This strips the tags *and* decodes the entities.
-     *
-     * The result is decoded text, so it is **not** safe to emit as raw HTML: a comment stored as
-     * `&lt;script&gt;` comes back as `<script>`. Use it only in non-HTML contexts, or let Twig
-     * escape it — `{{ review.plainComment }}` is fine, `{{ review.plainComment|raw }}` is an XSS
-     * hole. For HTML output use `comment` with `|purify` instead.
-     */
-    public function getPlainComment(): ?string
-    {
-        if ($this->comment === null) {
-            return null;
-        }
-
-        // Block-level boundaries become spaces first, or "<p>a</p><p>b</p>" collapses to "ab".
-        // Inline tags are left to strip_tags() so "Great <b>shirt</b>!" keeps its punctuation.
-        $text = preg_replace('/<\/?(?:p|div|br|li|ul|ol|h[1-6]|blockquote)\b[^>]*>/i', ' ', $this->comment);
-        $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-        return trim(preg_replace('/\s+/', ' ', $text));
-    }
-
     public function getCpViewUrl(): string
     {
         return UrlHelper::cpUrl("product-review/review/$this->id");
@@ -276,13 +248,26 @@ class Review extends Model
 
     protected function defineRules(): array
     {
-        $maxRating = Plugin::getInstance()->getSettings()->maxRating;
+        $settings = Plugin::getInstance()->getSettings();
+        $maxRating = $settings->maxRating;
         $rules = parent::defineRules();
-        $rules[] = [['id', 'productId', 'orderId', 'reviewerId', 'rating', 'updateCount', 'dateCreated', 'dateUpdated'], 'safe'];
+        $rules[] = [['id', 'productId', 'orderId', 'reviewerId', 'rating', 'comment', 'updateCount', 'dateCreated', 'dateUpdated'], 'safe'];
         $rules[] = [['productId', 'orderId', 'variantIds', 'reviewerId'], 'required'];
         $rules[] = ['rating', 'integer', 'min' => 1, 'max' => $maxRating, 'when' => function ($model) {
             return $model->updateCount > 0;
         }];
+
+        // 0 means no limit, so the rule is left out entirely rather than added with a max of zero.
+        //
+        // This measures the comment as the reviewer typed it. Reviews::saveReview() validates
+        // before it calls sanitizeComment(), so the value in hand here has not been through HTML
+        // Purifier yet — which is the point. Purifying can lengthen a comment, so counting after
+        // it would reject people for characters they never wrote. Moving the sanitize call above
+        // the validate call would silently break that.
+        if ($settings->maxCharactersPerReview > 0) {
+            $rules[] = ['comment', 'string', 'max' => $settings->maxCharactersPerReview];
+        }
+
         $rules[] = ['updateCount', 'validateReviewWindow'];
         return $rules;
     }

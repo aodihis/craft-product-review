@@ -1,165 +1,70 @@
 {% extends "_layouts/cp" %}
+{% import "_includes/forms.twig" as forms %}
+
 {% set title = "Product Review"|t('product-review') %}
 
 {% do view.registerAssetBundle('craft\\web\\assets\\admintable\\AdminTableAsset') -%}
 
 {% css %}
-    .dropdown-input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    }
-
-    .dropdown-menu {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        z-index: 1000;
-        border: 1px solid #ccc;
-        border-top: none;
-        border-radius: 0 0 5px 5px;
-        background-color: #fff;
-    }
-
-    .dropdown-item {
-        padding: 10px;
-        cursor: pointer;
-    }
-
-    .dropdown-item:hover {
-        background-color: #f0f0f0;
-    }
-
-    .filter-label {
-        margin-bottom: 0.4rem;
-        font-weight: bold;
-    }
-
-    .filter-group-container {
-        margin-bottom: 40px;
+    /* Layout only. Everything else is Craft's own field and element select styling, so the
+       filters match the rest of the control panel and follow it through theme changes. */
+    .pr-filters {
         display: flex;
         flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+        margin-bottom: 24px;
     }
 
-    .filter-container {
-        position: relative;
-        display: inline-block;
-        padding: 5px;
-        box-sizing: border-box; /* Ensures padding is included in the width */
+    .pr-filters .field {
+        margin: 0;
+        flex: 1 1 220px;
+        min-width: 0;
     }
 
-    .filter-container .clear-btn {
-        position: absolute;
-        cursor: pointer;
-        top: 65%;
-        right: 5px;
-        transform: translateY(-50%);
-    }
-
-    .select-dropdown:focus {
-        outline: none;
-    }
-
-    .select-dropdown {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        background-color: #fff;
-        appearance: none;
-        cursor: pointer;
-        background-image: url("data:image/svg+xml,%3Csvg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        background-size: 12px; /* Adjust size as necessary */
-    }
-
-    .filter-container-product {
-        flex: 0 0 40%;
-    }
-
-    .filter-container-reviewer {
-        flex: 0 0 40%;
-    }
-
-    .filter-container-rating {
-        flex: 0 0 10%;
-    }
-
-    @media only screen and (max-width: 992px) {
-            .filter-container-product  {
-                flex: 0 0 100%;
-            }
-
-            .filter-container-reviewer {
-                flex: 0 0 100%;
-            }
-
-            .filter-container-rating {
-                flex: 0 0 40%;
-            }
-    }
-    .comment {
-        white-space: nowrap;
-        width: 100%;                   /* IE6 needs any width */
-        overflow: hidden;              /* "overflow" value must be different from  visible"*/
-        -o-text-overflow: ellipsis;    /* Opera < 11*/
-        text-overflow:    ellipsis;    /* IE, Safari (WebKit), Opera >= 11, FF > 6 */
+    .pr-filters .pr-filter-rating {
+        flex: 0 1 140px;
     }
 {% endcss %}
 
 {% block content %}
-    <div style="margin: 5px">
-        <h3>Filter By</h3>
-    </div>
-    <div class="filter-group-container">
-        <div class="filter-container filter-container-reviewer">
-            <div class="filter-label"><label for="reviewer-filter" class="">Reviewer:</label></div>
-            <input type="text" id="reviewer-filter" name="reviewer-filter" class="dropdown-input reviewer-input"
-                   placeholder="Search..." autocomplete="off">
-            <button id="reviewer-filter-clear" class="clear-btn" title="Clear search" role="button"
-                    aria-label="Clear search" style="display: none;"></button>
-            <div class="dropdown-menu" id="reviewer-menu" style="display: none;"></div>
-        </div>
+    <div class="pr-filters">
+        {{ forms.elementSelectField({
+            label: "Reviewer"|t('product-review'),
+            id: 'reviewer-filter',
+            name: 'reviewer',
+            elementType: 'craft\\elements\\User',
+            single: true,
+            selectionLabel: "Choose a customer"|t('product-review'),
+        }) }}
 
-        <div class="filter-container filter-container-product">
-            <div class="filter-label"><label for="product-filter" class="">Product:</label></div>
-            <input type="text" id="product-filter" name="product-filter" class="dropdown-input" placeholder="Search..."
-                   autocomplete="off">
-            <button id="product-filter-clear" class="clear-btn" title="Clear search" role="button"
-                    aria-label="Clear search" style="display: none;"></button>
-            <div class="dropdown-menu" id="product-menu" style="display: none;"></div>
-        </div>
+        {{ forms.elementSelectField({
+            label: "Product"|t('product-review'),
+            id: 'product-filter',
+            name: 'product',
+            elementType: 'craft\\commerce\\elements\\Product',
+            single: true,
+            selectionLabel: "Choose a product"|t('product-review'),
+        }) }}
 
-        <div class="filter-container filter-container-rating">
-            <div class="filter-label"><label for="rating-filter" class="">Rating:</label></div>
-            <select name="rating-filter" id="rating-filter" class="select-dropdown">
-                <option value="">All</option>
-                {% for i in 1.. maxRating %}
-                    <option value="{{ i }}">{{ i }}</option>
-                {% endfor %}
-            </select>
-        </div>
+        {{ forms.selectField({
+            label: "Rating"|t('product-review'),
+            id: 'rating-filter',
+            name: 'rating',
+            fieldClass: 'pr-filter-rating',
+            options: [{ label: "Any"|t('product-review'), value: '' }]|merge(
+                (1..maxRating)|map(i => { label: i, value: i })
+            ),
+        }) }}
     </div>
+
     <div id="table-data"></div>
 {% endblock %}
 
-{#<script>#}
 {% js %}
-
 var selectedProductId = null;
 var selectedReviewerId = null;
 var selectedRating = null;
-
-// VueAdminTable writes cell content via innerHTML, so anything interpolated below has to be
-// escaped. cpEditUrl is empty when the element has been deleted but the review row survives —
-// render a plain label in that case rather than a link to nowhere.
-function reviewLink(url, label) {
-    var text = Craft.escapeHtml(label || '');
-    return url ? `<a href="${Craft.escapeHtml(url)}">${text}</a>` : text;
-}
 
 var columns = [
     { name: 'product', title: Craft.t('app', 'Product'), callback: function(product) {
@@ -170,15 +75,13 @@ var columns = [
         } },
     { name: 'rating', title: Craft.t('app', 'Rating'), callback: function (rating) {
             return '<span style="font-size:150%;color:#0a0d0f;">&starf;</span>'.repeat(rating);
-
         } },
     { name: 'comment', title: Craft.t('app', 'Comment'), callback: function (comment) {
             // VueAdminTable writes cell content via innerHTML, and the comment is
             // reviewer-supplied — escape it. Truncation would split tags anyway.
             var text = Craft.escapeHtml(comment);
             return (text.length > 25) ? text.slice(0, 100-1) + '&hellip;' : text;
-
-    } },
+        } },
     { name: 'reviewer', title: Craft.t('app', 'Reviewer'), callback: function(reviewer) {
             if (reviewer) {
                 return reviewLink(reviewer.cpEditUrl, reviewer.name);
@@ -188,12 +91,20 @@ var columns = [
     { name: 'url', title: '',
         callback: function(url) {
             if (url) {
-                return `<a href="${url}" class="view-btn btn" aria-label="View">View</a>`;
+                return `<a href="${Craft.escapeHtml(url)}" class="view-btn btn" aria-label="View">${Craft.t('app', 'View')}</a>`;
             }
             return '';
         }
     }
 ];
+
+// VueAdminTable writes cell content via innerHTML, so anything interpolated has to be escaped.
+// cpEditUrl is empty when the element has been deleted but the review row survives, so render a
+// plain label in that case rather than a link to nowhere.
+function reviewLink(url, label) {
+    var text = Craft.escapeHtml(label || '');
+    return url ? `<a href="${Craft.escapeHtml(url)}">${text}</a>` : text;
+}
 
 const adminTable = new Craft.VueAdminTable({
     container: '#table-data',
@@ -209,124 +120,66 @@ const adminTable = new Craft.VueAdminTable({
     },
 });
 
+/**
+ * Returns the ID of the element currently chosen in an element select, or null.
+ *
+ * Craft's element select adds its hidden inputs from JavaScript once something is chosen, so the
+ * chip's data-id is checked as well rather than relying on one representation being present.
+ */
+function chosenElementId(containerId) {
+    const container = document.getElementById(containerId);
 
-function updateDropdownMenu(data, menuSelector, inputSelector, clearSelector, type) {
-    menuSelector.innerHTML = "";
+    if (!container) {
+        return null;
+    }
 
-    if (data.length === 0) {
-        menuSelector.style.display = "none";
+    const input = container.querySelector('input[type="hidden"][name][value]:not([value=""])');
+
+    if (input) {
+        return input.value;
+    }
+
+    const chip = container.querySelector('[data-id]');
+
+    return chip ? chip.getAttribute('data-id') : null;
+}
+
+/**
+ * Element selects are driven by Garnish, which fires its events on the JavaScript object rather
+ * than the DOM, so there is nothing to bind a listener to from here. Watching the container covers
+ * both choosing and removing, whatever markup Craft renders.
+ */
+function watchElementSelect(containerId, onChange) {
+    const container = document.getElementById(containerId);
+
+    if (!container) {
         return;
     }
 
-    data.forEach(item => {
-        const listItem = document.createElement("div");
-        listItem.classList.add("dropdown-item");
-        // textContent, so a label is never parsed as markup.
-        listItem.textContent = item.label;
+    let last = chosenElementId(containerId);
 
-        listItem.setAttribute("data-id", item.id);
-        listItem.addEventListener("click", function() {
-            inputSelector.value = item.label;
-            if (type === 'reviewer') {
-                selectedReviewerId = item.id
-            } else {
-                selectedProductId = item.id
-            }
-            inputSelector.disabled = true;
-            menuSelector.style.display = "none";
-            clearSelector.style.display = "block";
-            adminTable.reload();
-        });
-        menuSelector.appendChild(listItem);
-    });
+    new MutationObserver(function() {
+        const current = chosenElementId(containerId);
 
-    menuSelector.style.display = "block";
+        if (current !== last) {
+            last = current;
+            onChange(current);
+        }
+    }).observe(container, { childList: true, subtree: true });
 }
 
-function fetchData(action, searchTerm) {
-    // Craft.getActionUrl() appends the query string with the right separator whether or not
-    // omitScriptNameInUrls is enabled, and encodes the term. Concatenating "&query=" onto
-    // actionUrl() only worked while action URLs happened to contain "?p=...".
-    const url = Craft.getActionUrl(action, { query: searchTerm });
-    return fetch(url, {
-        headers: {
-            'Accept': 'application/json'
-        },
-    })
-        .then(response => response.json())
-        .then(data => data.items)
-        .catch(error => {
-            console.error("Error fetching data:", error);
-            return [];
-        });
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-
-    const reviwerInput  = document.querySelector("#reviewer-filter");
-    const reviewerMenu  = document.querySelector("#reviewer-menu");
-    const reviewerClear = document.querySelector("#reviewer-filter-clear");
-
-    const productInput  = document.querySelector("#product-filter");
-    const productMenu   = document.querySelector("#product-menu");
-    const productClear  = document.querySelector("#product-filter-clear");
-
-    const ratingInput   = document.querySelector("#rating-filter");
-
-
-    reviwerInput.addEventListener("input", function() {
-        const searchTerm = this.value.trim().toLowerCase();
-        if (searchTerm.length < 2) {
-            return;
-        }
-        // Fetch data from API and update dropdown menu
-        fetchData('product-review/review-cp/user-search', searchTerm)
-            .then(data => {
-                updateDropdownMenu(data,reviewerMenu, reviwerInput, reviewerClear, 'reviewer' );
-            })
-            .catch(error => {
-                console.error("Error fetching data:", error);
-            });
-    });
-
-    productInput.addEventListener("input", function() {
-        const searchTerm = this.value.trim().toLowerCase();
-        if (searchTerm.length < 2) {
-            return;
-        }
-        // Fetch data from API and update dropdown menu
-        fetchData('product-review/review-cp/product-search', searchTerm)
-            .then(data => {
-                updateDropdownMenu(data, productMenu, productInput, productClear, 'product' );
-            })
-            .catch(error => {
-                console.error("Error fetching data:", error);
-            });
-    });
-
-    ratingInput.addEventListener("change", function (event) {
-        selectedRating = ratingInput.value;
-        adminTable.reload();
-    })
-    reviewerClear.addEventListener("click", function() {
-        reviwerInput.value = '';
-        selectedReviewerId = null;
-        reviwerInput.disabled = false;
-        this.style.display = "none";
-        adminTable.reload();
-    });
-
-
-
-    productClear.addEventListener("click", function() {
-        productInput.value = '';
-        selectedProductId = null;
-        productInput.disabled = false;
-        this.style.display = "none";
-        adminTable.reload();
-    });
-
-
+watchElementSelect('reviewer-filter', function(id) {
+    selectedReviewerId = id;
+    adminTable.reload();
 });
 
+watchElementSelect('product-filter', function(id) {
+    selectedProductId = id;
+    adminTable.reload();
+});
+
+document.getElementById('rating-filter').addEventListener('change', function() {
+    selectedRating = this.value || null;
+    adminTable.reload();
+});
 {% endjs %}

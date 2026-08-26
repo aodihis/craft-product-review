@@ -1,0 +1,117 @@
+{# One page of review cards, for the field layout panels in src/fieldlayoutelements/.
+
+   Rendered both inline with the edit screen and, for later pages, by
+   ReviewCpController::actionGetElementReviews() — so this is the only definition of a card, and the
+   panel's JavaScript never has to rebuild one.
+
+   Which parts appear is chosen by the UI element rather than by this template, so one markup file
+   covers the product, order and user panels. See BaseReviewsUiElement::columns() for the
+   recognised names, and reviews.twig for the wrapper and its styles. #}
+
+{# Keyed off the model's own constants rather than repeated literals, so a renamed status shows up
+   here as a Twig error instead of a silently unlabelled badge. #}
+{% set liveStatus = constant('aodihis\\productreview\\models\\Review::STATUS_LIVE') %}
+
+{% set statusLabels = {
+    (constant('aodihis\\productreview\\models\\Review::STATUS_PENDING')): "Pending"|t('product-review'),
+    (liveStatus): "Live"|t('product-review'),
+    (constant('aodihis\\productreview\\models\\Review::STATUS_EXPIRED')): "Expired"|t('product-review'),
+} %}
+
+{% for review in reviews %}
+    <article class="pr-review">
+        <div class="pr-review-head">
+            <div class="pr-review-who">
+                {% if 'product' in columns %}
+                    {# Both the product and the reviewer can be null while the review row survives:
+                       a soft-deleted element sits in the trash until garbage collection, so the
+                       foreign key has not cascaded yet. #}
+                    {% if review.product %}
+                        {{ _self.elementLink(review.product.cpEditUrl, review.product.title) }}
+                    {% else %}
+                        <span class="light">{{ "Removed product"|t('product-review') }}</span>
+                    {% endif %}
+                {% endif %}
+
+                {% if 'reviewer' in columns %}
+                    {% if review.reviewer %}
+                        {# Guest customers have neither a username nor a name, so fall back to the
+                           email — otherwise their reviews render with a blank author. #}
+                        {{ _self.elementLink(
+                            review.reviewer.cpEditUrl,
+                            review.reviewer.fullName ?: (review.reviewer.username ?: review.reviewer.email)
+                        ) }}
+                    {% else %}
+                        <span class="light">{{ "Deleted user"|t('product-review') }}</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="pr-review-meta">
+                {% if 'rating' in columns %}
+                    {# Guarded: a Twig range counts down, so `1..0` yields [1, 0] and would draw two
+                       stars for a review with no rating. #}
+                    {% if review.rating %}
+                        <span class="pr-review-rating">
+                            {% for i in 1..review.rating %}&starf;{% endfor %}
+                            <span class="visually-hidden">{{ review.rating }}</span>
+                        </span>
+                    {% else %}
+                        <span class="light">{{ "No rating"|t('product-review') }}</span>
+                    {% endif %}
+                {% endif %}
+
+                {% if 'status' in columns %}
+                    <span class="pr-review-status">
+                        <span class="status {{ review.status }}"></span>
+                        {{ statusLabels[review.status] ?? review.status }}
+                    </span>
+                {% endif %}
+
+                {% if 'date' in columns %}
+                    <span class="pr-review-date light">
+                        {{ review.dateCreated ? review.dateCreated|datetime('short') : '' }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if 'comment' in columns %}
+            {# Treated as plain text. If a reviewer typed a tag it is shown as the characters they
+               typed, which is both honest and safe — Twig escapes it, so nothing runs. #}
+            {% if review.comment %}
+                {% if review.comment|length > maxCommentLength %}
+                    {# Trimmed back to the last whole word, so the ellipsis does not appear
+                       mid-word. Falls back to the hard cut for text with no spaces in range. #}
+                    {% set cut = review.comment|slice(0, maxCommentLength) %}
+                    {% set atWord = cut|split(' ')|slice(0, -1)|join(' ')|trim %}
+
+                    <div class="pr-review-comment" data-pr-comment>
+                        <div class="pr-review-comment-short">{{ (atWord ?: cut) }}&hellip;</div>
+                        <div class="pr-review-comment-full hidden">{{ review.comment }}</div>
+                        <button type="button" class="pr-review-toggle"
+                                data-pr-toggle
+                                data-more="{{ "Show more"|t('product-review') }}"
+                                data-less="{{ "Show less"|t('product-review') }}">{{ "Show more"|t('product-review') }}</button>
+                    </div>
+                {% else %}
+                    <div class="pr-review-comment">{{ review.comment }}</div>
+                {% endif %}
+            {% else %}
+                <p class="pr-review-comment light">{{ "No feedback"|t('product-review') }}</p>
+            {% endif %}
+        {% endif %}
+
+    </article>
+{% endfor %}
+
+{# An element as a plain name rather than a chip, linking to its edit page.
+   cpEditUrl comes back empty when the viewer cannot edit the element, so the name is rendered on
+   its own in that case rather than as a link to a page they would be turned away from. #}
+{% macro elementLink(url, label) %}
+    {%- if url -%}
+        <a href="{{ url }}">{{ label }}</a>
+    {%- else -%}
+        {{ label }}
+    {%- endif -%}
+{% endmacro %}

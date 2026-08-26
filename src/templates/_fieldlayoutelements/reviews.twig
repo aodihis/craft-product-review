@@ -1,0 +1,236 @@
+{# Read-only review panel rendered by the field layout UI elements in src/fieldlayoutelements/.
+
+   The wrapper only: heading, paging footer, and the behaviour for both. A page of reviews is
+   rendered by _review-cards.twig, which is also what the paging endpoint returns, so the cards have
+   a single definition and this file never rebuilds one in JavaScript.
+
+   The first page arrives inline with the edit screen, so the panel is complete before any request
+   is made — paging and the comment toggles are the only things that need JavaScript. #}
+
+{% set containerId = "pr-reviews-#{source}-#{elementId}" %}
+
+{# The two strings the JavaScript below builds at runtime. Craft.t() falls back to the source
+   string, so this is what makes them translatable rather than what makes them appear. #}
+{% do view.registerTranslations('product-review', [
+    'Page {page} of {totalPages}',
+    'Couldn’t load reviews.',
+]) %}
+
+{% css %}
+    /* Layout only. Colours come from the control panel's own custom properties, so the panel
+       follows Craft through theme changes rather than pinning its own palette. */
+    .pr-reviews-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .pr-review {
+        border: 1px solid var(--hairline-color);
+        border-radius: var(--large-border-radius, 8px);
+        padding: 14px 16px;
+        background-color: var(--white);
+    }
+
+    /* The head keeps who wrote it on one side and the at-a-glance facts on the other, and wraps
+       into two lines rather than squeezing when the panel sits in a narrow field layout column. */
+    .pr-review-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px 16px;
+    }
+
+    .pr-review-who,
+    .pr-review-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 12px;
+        min-width: 0;
+    }
+
+    .pr-review-rating {
+        white-space: nowrap;
+        color: var(--yellow-600, #cf9500);
+        font-size: 15px;
+        letter-spacing: 1px;
+    }
+
+    .pr-review-status {
+        white-space: nowrap;
+    }
+
+    .pr-review-date {
+        white-space: nowrap;
+    }
+
+    .pr-review-comment {
+        margin-top: 10px;
+        /* Comments are reviewer-supplied, so an unbroken string cannot be allowed to widen the
+           card past its column. */
+        overflow-wrap: anywhere;
+    }
+
+    .pr-review-comment > :last-child {
+        margin-bottom: 0;
+    }
+
+    /* Styled as a link rather than a button: it reveals text already on the card rather than
+       taking the reader anywhere, so it should not carry a button's weight. */
+    .pr-review-toggle {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--link-color);
+        cursor: pointer;
+        font-size: inherit;
+    }
+
+    .pr-review-toggle:hover {
+        text-decoration: underline;
+    }
+
+    .pr-reviews-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 16px;
+        margin-top: 12px;
+    }
+
+    /* Held at the width the widest page count needs, so stepping through pages does not shuffle
+       the buttons sideways. */
+    .pr-reviews-page {
+        white-space: nowrap;
+    }
+{% endcss %}
+
+<div class="pr-reviews" id="{{ containerId }}"
+     data-pr-source="{{ source }}"
+     data-pr-element-id="{{ elementId }}">
+    <h2>{{ heading }}</h2>
+
+    {% if total == 0 %}
+        <p class="light">{{ emptyMessage }}</p>
+    {% else %}
+        <div class="pr-reviews-list" data-pr-list>{{ cards|raw }}</div>
+
+        {% if totalPages > 1 %}
+            <div class="pr-reviews-footer" data-pr-footer>
+                <span class="pr-reviews-page light" data-pr-page-label>
+                    {{ "Page {page} of {totalPages}"|t('product-review', { page: 1, totalPages: totalPages }) }}
+                </span>
+
+                <div class="btngroup">
+                    <button type="button" class="btn" data-pr-prev disabled>
+                        {{ "Previous"|t('product-review') }}
+                    </button>
+                    <button type="button" class="btn" data-pr-next>
+                        {{ "Next"|t('product-review') }}
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+{% js %}
+(function() {
+    const container = document.getElementById('{{ containerId|e('js') }}');
+
+    if (!container) {
+        return;
+    }
+
+    const list = container.querySelector('[data-pr-list]');
+
+    /**
+     * Swaps a long comment between its truncated plain text and its full HTML.
+     *
+     * Delegated from the container rather than bound per card, so cards fetched for a later page
+     * are covered without rebinding anything.
+     */
+    container.addEventListener('click', function(event) {
+        const toggle = event.target.closest('[data-pr-toggle]');
+
+        if (!toggle || !container.contains(toggle)) {
+            return;
+        }
+
+        const comment = toggle.closest('[data-pr-comment]');
+        const full = comment.querySelector('.pr-review-comment-full');
+        const short = comment.querySelector('.pr-review-comment-short');
+        const expanded = short.classList.contains('hidden');
+
+        short.classList.toggle('hidden', !expanded);
+        full.classList.toggle('hidden', expanded);
+        toggle.textContent = expanded ? toggle.dataset.more : toggle.dataset.less;
+    });
+
+    const footer = container.querySelector('[data-pr-footer]');
+
+    // No footer means a single page, so there is nothing left to wire up.
+    if (!footer) {
+        return;
+    }
+
+    const pageLabel = footer.querySelector('[data-pr-page-label]');
+    const prev = footer.querySelector('[data-pr-prev]');
+    const next = footer.querySelector('[data-pr-next]');
+
+    let page = 1;
+    let totalPages = {{ totalPages }};
+    let loading = false;
+
+    function render() {
+        pageLabel.textContent = Craft.t('product-review', 'Page {page} of {totalPages}', {
+            page: page,
+            totalPages: totalPages,
+        });
+
+        prev.disabled = loading || page <= 1;
+        next.disabled = loading || page >= totalPages;
+    }
+
+    async function goTo(requested) {
+        // Both buttons stay disabled until the response lands, so a double click cannot leave two
+        // requests racing to write the list.
+        if (loading || requested < 1 || requested > totalPages) {
+            return;
+        }
+
+        loading = true;
+        render();
+
+        try {
+            const response = await Craft.sendActionRequest('POST', 'product-review/review-cp/get-element-reviews', {
+                data: {
+                    source: container.dataset.prSource,
+                    elementId: container.dataset.prElementId,
+                    page: requested,
+                },
+            });
+
+            // The server clamps the page against a fresh count, so take both back from it rather
+            // than assuming the request got what it asked for.
+            list.innerHTML = response.data.html;
+            page = response.data.page;
+            totalPages = response.data.totalPages;
+        } catch (error) {
+            Craft.cp.displayError(Craft.t('product-review', 'Couldn’t load reviews.'));
+        } finally {
+            loading = false;
+            render();
+        }
+    }
+
+    prev.addEventListener('click', () => goTo(page - 1));
+    next.addEventListener('click', () => goTo(page + 1));
+
+    render();
+})();
+{% endjs %}

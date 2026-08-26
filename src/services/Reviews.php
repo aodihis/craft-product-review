@@ -164,6 +164,9 @@ class Reviews extends Component
         // this existed are still raw, and escaping is context-dependent anyway — the control panel
         // table needs HTML-escaping, not purified markup, because it truncates and writes through
         // innerHTML.
+        //
+        // Deliberately after validate(): the maxCharactersPerReview rule counts the comment as the
+        // reviewer typed it, and purifying first would count characters they never wrote.
         $model->comment = $this->sanitizeComment($model->comment);
 
         $fields = [
@@ -249,30 +252,32 @@ class Reviews extends Component
             return;
         }
 
-        $reviews = [];
+        // Group the purchased variants by the product that owns them, so one review covers every
+        // variant of a product bought in the same order.
+        $variantIdsByProduct = [];
 
-        foreach ($order->lineItems as $lineItem) {
-            if (!$lineItem->purchasable instanceof Variant) {
-                continue;
-            }
-            $productId = $lineItem->purchasable->getOwnerId();
-            if (!$lineItem->purchasable instanceof Variant) {
-                continue;
-            }
-            if (isset($reviews[$productId])) {
-                $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
+        foreach ($order->getLineItems() as $lineItem) {
+            $purchasable = $lineItem->getPurchasable();
+
+            // Orders can contain other purchasable types, such as donations, which have no product
+            // to review.
+            if (!$purchasable instanceof Variant) {
                 continue;
             }
 
-            $reviews[$productId] = new ModelsReview();
-            $reviews[$productId]->productId = $productId;
-            $reviews[$productId]->orderId = $order->id;
-            $reviews[$productId]->reviewerId = $customer->id;
-            $reviews[$productId]->updateCount = 0;
-            $reviews[$productId]->variantIds[] = $lineItem->purchasableId;
+            $variantIdsByProduct[$purchasable->getOwnerId()][] = $lineItem->purchasableId;
         }
 
-        foreach ($reviews as $review) {
+        foreach ($variantIdsByProduct as $productId => $variantIds) {
+            $review = new ModelsReview();
+            $review->productId = $productId;
+            $review->orderId = $order->id;
+            $review->reviewerId = $customer->id;
+            $review->updateCount = 0;
+            // The same variant can appear on more than one line item, which would otherwise write
+            // a duplicate row for it.
+            $review->variantIds = array_values(array_unique($variantIds));
+
             $this->saveReview($review, false);
         }
     }
@@ -342,10 +347,8 @@ class Reviews extends Component
     private function _buildReviewModel(array $record, array $variantIds): ModelsReview
     {
         $record['variantIds'] = $variantIds;
-        $comment = $record['comment'];
-        $review = Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $record]]);
-        $review->comment = $comment;
-        return $review;
+
+        return Craft::createObject(ModelsReview::class, ['config' => ['attributes' => $record]]);
     }
 
     /**
@@ -435,6 +438,13 @@ class Reviews extends Component
         }
         if ($sort) {
             $query->orderBy($sort);
+            // Every caller sorts on a column that repeats — dateCreated above all, since
+            // createReviewForOrder() writes one row per product in a single pass, so an order's
+            // reviews all share a timestamp to the second. A sort on a non-unique column is not a
+            // total order, which leaves LIMIT/OFFSET free to return a tied row on two consecutive
+            // pages and drop another entirely. The ID breaks the tie; appending it is a no-op for
+            // a sort that is already unique.
+            $query->addOrderBy('reviews.id DESC');
         }
         return $query;
     }

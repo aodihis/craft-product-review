@@ -46,35 +46,34 @@ elements. Reads go through `craft\db\Query` in `services/Reviews.php`, not the A
   `ProductQueryBehavior`, which joins an average-rating subquery into *every* product query so
   `averageRating` works as a table attribute and sort option.
 - Public write endpoint: `ReviewController::actionSave()`.
+- Field layout UI elements in `fieldlayoutelements/`, offered to product, order and user layouts by
+  `Plugin::registerFieldLayoutUiElements()` based on the layout's `type`. They are UI elements
+  rather than fields because reviews are written on the front end: there is nothing to fill in, and
+  nothing to store on the element being edited.
 
 ## Local development
 
-The plugin is developed against the Craft install at `C:\workspace\craft-cms\cms`, which runs under
-DDEV. **Docker Desktop must be running first.**
+Develop against any Craft 5 install that already has Craft Commerce 5. Require the plugin from your
+local checkout as a Composer path repository, so edits are picked up with no reinstall:
 
-The plugin is mounted into the container and required as a Composer path repository:
-
-- Mount: `.ddev/docker-compose.plugin-mount.yaml` maps this repo to `/home/shared/product-review`
-- Repo entry: `repositories.product-review` → `path` → `/home/shared/product-review`
-- Required as `aodihis/product-review:@dev`
-
-Because it is a path repository, **edits here are live in the container** — no reinstall needed.
-
-```bash
-cd C:\workspace\craft-cms\cms
-ddev start
-ddev exec php craft plugin/install product-review   # first time only
+```json
+"repositories": [
+    { "type": "path", "path": "../product-review" }
+]
 ```
 
-Notes that will save you time:
+```bash
+composer require aodihis/product-review:@dev
+php craft plugin/install product-review
+```
 
-- Run `ddev` from **PowerShell, not Git Bash** — Git Bash rewrites container paths
-  (`/home/shared/…` becomes `C:/Program Files/Git/home/shared/…`) and the command fails.
-- The Craft project pins `policy.advisories.ignore: ["dompdf/dompdf"]`. Composer 2.9+ blocks
-  advisory-flagged packages, and Commerce, Freeform and Formie all depend on dompdf, so without this
-  the project cannot resolve at all. Do not remove it.
-- `php craft --version` is not a command; use `php craft version`.
-- Site: https://cms.ddev.site · CP: https://cms.ddev.site/admin/product-review
+If the install runs in a container, `path` must be the path *inside* the container, and the checkout
+has to be mounted there. Some container tooling rewrites POSIX-looking paths when commands are run
+from a Unix-style shell on Windows, so if a container path arrives mangled, try the native shell.
+
+The plugin does nothing until an order status is chosen in its settings, so set one before testing.
+
+`php craft --version` is not a command. Use `php craft version`.
 
 ### Quality tooling
 
@@ -96,8 +95,10 @@ of them. The result is a diff touching every file and burying the real change.
 
 - Services are registered in `plugin/Services.php` and reached via `Plugin::getInstance()->getReviews()`.
 - Models are `craft\base\Model`; validation lives in `defineRules()`, never `rules()`.
-- The `Review` model's `comment` is **not** in the `safe` rule, so `setAttributes()` drops it —
-  `Reviews::_buildReviewModel()` reassigns it by hand. Keep that in mind before "simplifying" it.
+- Every attribute the plugin populates from a database row is in the `safe` rule, so
+  `setAttributes()` handles the whole row. `comment` used to be missing, which silently dropped it
+  and forced a manual reassignment afterwards. Add new attributes to that rule rather than
+  reassigning them.
 - Use the `product-review` translation category for all user-facing strings, and never interpolate
   values into the translation *key* — pass them as params.
 - Reviewer-supplied comment text is untrusted, and is sanitized **twice** on purpose:
@@ -187,7 +188,14 @@ the file.
 
 Craft requires the format `## X.Y.Z - YYYY-MM-DD`. **Any level-two heading that does not match is
 ignored, along with every entry beneath it**, so a heading like `## Unreleased` means the whole
-release is invisible in the Plugin Store and the Updates utility. Use the real version and date.
+release is invisible in the Plugin Store and the Updates utility.
+
+While work is unreleased, `## Unreleased` is the right heading precisely *because* Craft ignores it.
+Notes for a version nobody can install yet should not appear in anyone's update screen.
+
+**Renaming it to `## X.Y.Z - YYYY-MM-DD` is part of cutting the release**, alongside deciding the
+version number. Forgetting that step is how a whole release ends up invisible, so check the heading
+before tagging.
 
 ### The one exception: changes that need action after updating
 
@@ -214,6 +222,44 @@ housekeeping makes an ordinary update look alarming.
 
 Keep the note to the action itself, in one sentence. Not what broke, not who is affected, not why.
 That belongs in the commit message. A reader scanning an update list wants the instruction.
+
+## Always update the documentation
+
+`docs/` is the manual a site owner reads. Anything that changes what they can do, or how they do it,
+belongs there in the same commit as the code. A feature that only exists in the changelog is a
+feature nobody finds.
+
+Update the docs when a change adds or alters:
+
+- a **feature** or a control panel surface, in `docs/reviews/control-panel.md`
+- a **setting** — the name, what it does, its default, or what happens at its edges
+- a **Twig method, behavior method, or service method** — `docs/reviews/available-custom-behavior.md`,
+  `docs/reviews/review.md`, `docs/reviews/available-functions.md` and `docs/reviews/services.md`
+  list these individually, so a new one needs a new entry
+- **behaviour someone might already depend on**, even when no signature changed
+
+### How to write them
+
+**Read `.claude/skills/plugin-docs/SKILL.md` before writing or revising anything under `docs/`.** It
+carries the full style guide: the Verbb plugin docs are the model, the audience is a developer
+integrating the plugin rather than one working on it, and it lists what must never be documented.
+
+The short version of that last part, because it is the rule most often broken: no unreleased or
+unfinished behaviour, no databases or SQL, no internal class surface such as validation rules, the
+settings model or permission constants, and no re-documenting Craft's own events and APIs.
+
+Two rules that are easy to miss:
+
+- **Rewrite what a change made wrong, do not only append.** Rebuilding the control panel filters
+  meant the old "type two or more characters to search" description was describing something that no
+  longer existed. Grep `docs/` for the thing you touched before assuming only an addition is needed.
+- **A removal is a documentation change too.** Deleting an endpoint or a method means deleting or
+  correcting the paragraph that promised it.
+
+This is separate from the changelog, and does not replace it. The changelog says *what changed in
+this release* in one line; the docs say *how the thing works* for someone who was not watching.
+A user-facing change usually needs both, and adding a setting needs `docs/settings.md` as well as
+the changelog line.
 
 ## Watch out for
 

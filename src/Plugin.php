@@ -5,6 +5,7 @@ namespace aodihis\productreview;
 use aodihis\productreview\behaviors\ProductBehavior;
 use aodihis\productreview\behaviors\ProductQueryBehavior;
 use aodihis\productreview\behaviors\UserBehavior;
+use aodihis\productreview\fieldlayoutelements\BaseReviewsUiElement;
 use aodihis\productreview\models\Settings;
 use aodihis\productreview\plugin\Services;
 use aodihis\productreview\services\FrontEnd;
@@ -14,15 +15,18 @@ use craft\base\Event;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
 use craft\commerce\elements\db\ProductQuery;
+use craft\commerce\elements\Order;
 use craft\commerce\elements\Product;
 use craft\commerce\events\OrderStatusEvent;
 use craft\commerce\services\OrderHistories;
 use craft\elements\User;
 use craft\events\DefineBehaviorsEvent;
+use craft\events\DefineFieldLayoutElementsEvent;
 use craft\events\RegisterElementSortOptionsEvent;
 use craft\events\RegisterElementTableAttributesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterUserPermissionsEvent;
+use craft\models\FieldLayout;
 use craft\services\UserPermissions;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
@@ -96,7 +100,43 @@ class Plugin extends BasePlugin
         $this->registerCpRules();
         $this->registerCraftVariable();
         $this->registerPermissions();
+        $this->registerFieldLayoutUiElements();
 
+    }
+
+    /**
+     * Offers the review list UI elements to the field layouts that can resolve reviews.
+     *
+     * Only product, order and user layouts get one, and each gets the single element written for
+     * it, because the lookup differs: a product's reviews are the ones written *about* it, a
+     * user's are the ones written *by* them, and an order's are the ones it asked for. Every other
+     * layout, variants included, is left alone rather than offered a panel that could not resolve
+     * anything.
+     *
+     * These are UI elements rather than fields on purpose. Reviews are written by customers on the
+     * front end, so there is nothing to fill in and nothing to store on the element being edited,
+     * and leaving it as a layout element keeps the choice of whether to show it with the developer.
+     */
+    private function registerFieldLayoutUiElements(): void
+    {
+        Event::on(
+            FieldLayout::class,
+            FieldLayout::EVENT_DEFINE_UI_ELEMENTS,
+            static function (DefineFieldLayoutElementsEvent $event) {
+                /** @var FieldLayout $layout */
+                $layout = $event->sender;
+
+                // The element each UI element belongs to is declared on the class itself, so this
+                // reads the same map the paging endpoint resolves against rather than keeping a
+                // second copy that could drift from it.
+                foreach (BaseReviewsUiElement::SOURCES as $class) {
+                    if ($layout->type === $class::elementType()) {
+                        $event->elements[] = $class;
+                        return;
+                    }
+                }
+            }
+        );
     }
 
     private function registerPermissions(): void
@@ -204,7 +244,7 @@ class Plugin extends BasePlugin
             function (OrderStatusEvent $event) {
                 // @var OrderHistory $orderHistory
                 $orderHistory = $event->orderHistory;
-                // @var Order $order
+                /** @var Order $order */
                 $order = $event->order;
 
                 if ($orderHistory->getNewStatus()->handle === $this->getSettings()->orderStatusToReview) {

@@ -10,18 +10,27 @@ rating and an optional comment, and you read the results in the control panel.
 
 **[Read the full documentation](docs/README.md)**
 
+**Get Started**
+
 | | |
 | --- | --- |
-| [Installation](docs/installation.md) | Requirements, install, uninstall |
-| [Settings](docs/settings.md) | Choosing the order status, the review window |
-| [How reviews work](docs/how-reviews-work.md) | The lifecycle, statuses, guest orders |
-| [Twig reference](docs/twig-reference.md) | Every variable and method available to templates |
-| [Building a review form](docs/review-form.md) | Submitting a review, with working examples |
-| [Displaying reviews](docs/displaying-reviews.md) | Product pages, stars, breakdowns, structured data |
-| [Control panel](docs/control-panel.md) | Finding the section, filters, permissions |
-| [Events and extending](docs/extending.md) | Hooking in from your own module |
-| [PHP API reference](docs/php-api.md) | Services, models, constants |
-| [Troubleshooting](docs/troubleshooting.md) | When reviews do not appear |
+| [Product Review](docs/get-started/product-review.md) | What the plugin does, and a four step quick start |
+| [Requirements](docs/get-started/requirements.md) | Craft, Commerce and PHP versions |
+| [Installation and Setup](docs/get-started/installation-and-setup.md) | Plugin Store, Composer, uninstalling |
+| [Configuration](docs/get-started/configuration.md) | Choosing the order status, the review window |
+
+**Reviews**
+
+| | |
+| --- | --- |
+| [Flow](docs/reviews/flow.md) | The lifecycle, the three statuses, the review window |
+| [Review](docs/reviews/review.md) | Everything on a review, in Twig and PHP |
+| [Available Functions](docs/reviews/available-functions.md) | `craft.productReview`, for fetching reviews anywhere |
+| [Available Custom Behavior](docs/reviews/available-custom-behavior.md) | What the plugin adds to products and users, in Twig and PHP |
+| [Submitting a review](docs/reviews/submitting-a-review.md) | The form, with working examples |
+| [Displaying reviews](docs/reviews/displaying-reviews.md) | Product pages, stars, breakdowns |
+| [Control Panel](docs/reviews/control-panel.md) | The section, filters, permissions, review panels |
+| [Services](docs/reviews/services.md) | Calling the plugin from your own PHP |
 
 ## Requirements
 
