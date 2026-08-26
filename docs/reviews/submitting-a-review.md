@@ -1,26 +1,20 @@
-# Building a review form
+# Submitting a review
 
-This page covers submitting a review, from the simplest possible form to a complete account page.
+To submit a review, you can make a post request to `product-review/review/save` action endpoint.
 
-## The endpoint
+A review must already exist before it can be submitted. The plugin creates them when an order reaches your configured status, and `currentUser.getWaitingToReviewItems()` lists the ones waiting.
 
-| | |
+Params
+
+| Param | Description |
 | --- | --- |
-| Action | `product-review/review/save` |
-| Method | POST |
-| Requires | A signed-in user, who must own the review |
+| `id` | Required. The ID of the review that will be saved. |
+| `rating` | Required. The rating value for the product, a whole number from 1 to 5. |
+| `comment` | Optional. The reviewer's comment for the product. HTML is sanitized before it is stored. |
 
-### Parameters
+The customer must be signed in and must own the review.
 
-| Name | Required | Notes |
-| --- | --- | --- |
-| `id` | Yes | The review ID. A review must already exist, they are not created by this form |
-| `rating` | Yes | A whole number from 1 to 5 |
-| `comment` | No | Free text. HTML is sanitized before it is stored |
-| `CRAFT_CSRF_TOKEN` | Yes | Added by `csrfInput()` |
-| `redirect` | No | Where to go after success, added by `redirectInput()` |
-
-## The simplest form that works
+### The simplest form that works
 
 Plain HTML, no styling, nothing optional.
 
@@ -53,9 +47,7 @@ Plain HTML, no styling, nothing optional.
 {% endfor %}
 ```
 
-That is genuinely all that is required. Everything below is refinement.
-
-## Adding stars instead of a dropdown
+### Stars instead of a dropdown
 
 Radio buttons, styled with CSS, keep it accessible and need no JavaScript.
 
@@ -71,46 +63,33 @@ Radio buttons, styled with CSS, keep it accessible and need no JavaScript.
 </fieldset>
 ```
 
-## Handling the response
+### Handling the response
 
-### Success
-
-The controller sets a flash notice and follows your `redirect` parameter. Without a `redirect`, the
-customer stays where they are.
-
-```twig
-{{ redirectInput('account/reviews') }}
-```
+The controller sets a flash notice and follows your `redirect` parameter. Without one, the customer stays where they are, so show the flash messages.
 
 ```twig
 {% set notice = craft.app.session.getFlash('notice') %}
-{% if notice %}
-  <p class="notice">{{ notice }}</p>
-{% endif %}
+{% if notice %}<p class="notice">{{ notice }}</p>{% endif %}
+
+{% set error = craft.app.session.getFlash('error') %}
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
 ```
 
-### Validation failure
-
-If the rating is missing or out of range, or the review window has closed, the controller sets a
-flash error and puts the failed model back into the template as `review`.
+When validation fails, the failed review is put back into the template as `review`, so you can re-render the form with the customer's input and the messages.
 
 ```twig
-{% set error = craft.app.session.getFlash('error') %}
-{% if error %}
-  <p class="error">{{ error }}</p>
-
-  {% if review is defined and review.hasErrors() %}
-    <ul>
-      {% for message in review.getFirstErrors() %}
-        <li>{{ message }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+{% if review is defined and review.hasErrors() %}
+  <ul>
+    {% for message in review.getFirstErrors() %}
+      <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
 {% endif %}
 ```
 
-Note the variable is called `review`. If your own loop also uses `review`, rename one of them to
-avoid confusion.
+{% hint style="info" %}
+Note the variable is called `review`. If your own loop also uses `review`, rename one of them to avoid confusion.
+{% endhint %}
 
 ### Errors that are not validation failures
 
@@ -121,14 +100,11 @@ avoid confusion.
 | Review belongs to a different customer | 403 |
 | Review has already been submitted | 400 |
 
-These are deliberate errors rather than form validation, because they should not happen from a form
-you built correctly. They exist to stop someone editing the hidden `id` field and writing to another
-customer's review.
+These are deliberate errors rather than form validation, because they should not happen from a form you built correctly. They exist to stop someone editing the hidden `id` field and writing to another customer's review.
 
-## Submitting with AJAX
+### Submitting with AJAX
 
-Send `Accept: application/json` and the same parameters. A success returns the saved review, a
-failure returns the validation errors.
+Send `Accept: application/json` and the same parameters. A success returns the saved review, a failure returns the validation errors.
 
 ```js
 fetch(window.location.href, {
@@ -149,7 +125,7 @@ fetch(window.location.href, {
     });
 ```
 
-## A complete account page
+### A complete account page
 
 Waiting reviews with forms, plus what the customer has already written.
 
@@ -214,3 +190,7 @@ Waiting reviews with forms, plus what the customer has already written.
   <p>You have not submitted any reviews yet.</p>
 {% endfor %}
 ```
+
+{% hint style="info" %}
+A review can no longer be submitted once its review window has closed. See Configuration for `maxDaysToReview`.
+{% endhint %}

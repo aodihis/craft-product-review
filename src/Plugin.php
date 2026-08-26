@@ -126,17 +126,17 @@ class Plugin extends BasePlugin
             FieldLayout::EVENT_DEFINE_UI_ELEMENTS,
             static function (DefineFieldLayoutElementsEvent $event) {
                 $elements = [
-                    Product::class => ProductReviews::class,
-                    Order::class => OrderReviews::class,
-                    User::class => UserReviews::class,
+                    // Product::class => ProductReviews::class,
+                    // Order::class => OrderReviews::class,
+                    // User::class => UserReviews::class,
                 ];
 
                 /** @var FieldLayout $layout */
-                $layout = $event->sender;
+                // $layout = $event->sender;
 
-                if (isset($elements[$layout->type])) {
-                    $event->elements[] = $elements[$layout->type];
-                }
+                // if (isset($elements[$layout->type])) {
+                //     $event->elements[] = $elements[$layout->type];
+                // }
             }
         );
     }

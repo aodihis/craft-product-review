@@ -1,68 +1,30 @@
 # Product Review documentation
 
 Product Review adds customer reviews to Craft Commerce. When an order reaches an order status you
-choose, the plugin creates one empty review per product in that order. The customer then fills it in
-with a rating and an optional comment, and you moderate the results from the control panel.
+choose, the plugin creates one review per product in that order. The customer then fills it in with a
+rating and an optional comment, and you read the results in the control panel.
 
-## Contents
+These pages mirror the published documentation at <https://aodihis.gitbook.io/product-review>, page
+for page and section for section. The only difference is that unreleased features are documented
+here first, and published when they ship.
 
-1. [Installation](installation.md)
-2. [Settings](settings.md)
-3. [How reviews work](how-reviews-work.md)
-4. [Product and user methods](product-and-user-methods.md)
-5. [The review object](review-object.md)
-6. [The craft.productReview Twig variable](twig-variable.md)
-7. [Building a review form](review-form.md)
-8. [Displaying reviews on a product page](displaying-reviews.md)
-9. [Control panel](control-panel.md)
-10. [PHP API reference](php-api.md)
+## Get Started
 
-## Quick start
+1. [Product Review](get-started/product-review.md)
+2. [Requirements](get-started/requirements.md)
+3. [Installation and Setup](get-started/installation-and-setup.md)
+4. [Configuration](get-started/configuration.md)
 
-Four steps to a working review on a page.
+## Reviews
 
-**1. Choose the order status that starts a review.** Go to Settings, then Plugins, then Product
-Review, and pick a status such as Completed. Nothing happens until this is set.
-
-**2. Let an order reach that status.** Either place a test order and change its status in Commerce,
-or wait for a real one. The plugin creates one review per product in the order, owned by the
-customer.
-
-**3. Give the customer somewhere to submit it.** In a template the customer can reach when signed
-in:
-
-```twig
-{% for review in currentUser.getWaitingToReviewItems() %}
-  <form method="post">
-    {{ csrfInput() }}
-    {{ actionInput('product-review/review/save') }}
-    {{ hiddenInput('id', review.id) }}
-
-    <p>{{ review.product.title }}</p>
-
-    <select name="rating" required>
-      {% for i in 1..5 %}<option value="{{ i }}">{{ i }}</option>{% endfor %}
-    </select>
-
-    <textarea name="comment"></textarea>
-    <button type="submit">Submit review</button>
-  </form>
-{% endfor %}
-```
-
-**4. Show the reviews on the product page.**
-
-```twig
-{% for review in product.getReviews() %}
-  <article>
-    <p>Rating: {{ review.rating }} out of 5</p>
-    <p>{{ review.renderComment() }}</p>
-  </article>
-{% endfor %}
-```
-
-That is the whole loop. The rest of this documentation covers the details, the full list of
-available methods, and how to handle the cases that come up on a real store.
+1. [Flow](reviews/flow.md)
+2. [Review](reviews/review.md)
+3. [Available Functions](reviews/available-functions.md)
+4. [Available Custom Behavior](reviews/available-custom-behavior.md)
+5. [Submitting a review](reviews/submitting-a-review.md)
+6. [Displaying reviews](reviews/displaying-reviews.md)
+7. [Control Panel](reviews/control-panel.md)
+8. [Services](reviews/services.md)
 
 ## Requirements
 
