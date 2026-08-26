@@ -45,7 +45,9 @@ class Settings extends Model
     {
         $rules = parent::defineRules();
         $rules[] = [['maxDaysToReview', 'orderStatusToReview'], 'required'];
-        $rules[] = [['maxDaysToReview'], 'number'];
+        // Negatives would put the review deadline before the review was created, expiring every
+        // review the moment it is made.
+        $rules[] = [['maxDaysToReview'], 'number', 'min' => 0];
         $rules[] = [['maxCharactersPerReview'], 'integer', 'min' => 0];
         return $rules;
     }
