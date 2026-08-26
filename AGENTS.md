@@ -53,32 +53,27 @@ elements. Reads go through `craft\db\Query` in `services/Reviews.php`, not the A
 
 ## Local development
 
-The plugin is developed against the Craft install at `C:\workspace\craft-cms\cms`, which runs under
-DDEV. **Docker Desktop must be running first.**
+Develop against any Craft 5 install that already has Craft Commerce 5. Require the plugin from your
+local checkout as a Composer path repository, so edits are picked up with no reinstall:
 
-The plugin is mounted into the container and required as a Composer path repository:
-
-- Mount: `.ddev/docker-compose.plugin-mount.yaml` maps this repo to `/home/shared/product-review`
-- Repo entry: `repositories.product-review` → `path` → `/home/shared/product-review`
-- Required as `aodihis/product-review:@dev`
-
-Because it is a path repository, **edits here are live in the container** — no reinstall needed.
-
-```bash
-cd C:\workspace\craft-cms\cms
-ddev start
-ddev exec php craft plugin/install product-review   # first time only
+```json
+"repositories": [
+    { "type": "path", "path": "../product-review" }
+]
 ```
 
-Notes that will save you time:
+```bash
+composer require aodihis/product-review:@dev
+php craft plugin/install product-review
+```
 
-- Run `ddev` from **PowerShell, not Git Bash** — Git Bash rewrites container paths
-  (`/home/shared/…` becomes `C:/Program Files/Git/home/shared/…`) and the command fails.
-- The Craft project pins `policy.advisories.ignore: ["dompdf/dompdf"]`. Composer 2.9+ blocks
-  advisory-flagged packages, and Commerce, Freeform and Formie all depend on dompdf, so without this
-  the project cannot resolve at all. Do not remove it.
-- `php craft --version` is not a command; use `php craft version`.
-- Site: https://cms.ddev.site · CP: https://cms.ddev.site/admin/product-review
+If the install runs in a container, `path` must be the path *inside* the container, and the checkout
+has to be mounted there. Some container tooling rewrites POSIX-looking paths when commands are run
+from a Unix-style shell on Windows, so if a container path arrives mangled, try the native shell.
+
+The plugin does nothing until an order status is chosen in its settings, so set one before testing.
+
+`php craft --version` is not a command. Use `php craft version`.
 
 ### Quality tooling
 
@@ -236,11 +231,11 @@ feature nobody finds.
 
 Update the docs when a change adds or alters:
 
-- a **feature** or a control panel surface, such as the review panels in `docs/control-panel.md`
+- a **feature** or a control panel surface, in `docs/reviews/control-panel.md`
 - a **setting** — the name, what it does, its default, or what happens at its edges
-- a **Twig method, behavior method, or service method** — `docs/product-and-user-methods.md`,
-  `docs/review-object.md`, `docs/twig-variable.md` and `docs/php-api.md` list these
-  individually, so a new one needs a new entry
+- a **Twig method, behavior method, or service method** — `docs/reviews/available-custom-behavior.md`,
+  `docs/reviews/review.md`, `docs/reviews/available-functions.md` and `docs/reviews/services.md`
+  list these individually, so a new one needs a new entry
 - **behaviour someone might already depend on**, even when no signature changed
 
 ### How to write them

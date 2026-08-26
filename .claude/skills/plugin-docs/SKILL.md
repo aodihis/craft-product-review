@@ -86,10 +86,10 @@ behavior under a "Twig reference" heading tells a PHP reader it is unavailable, 
 
 | Available from | Page |
 | --- | --- |
-| Twig and PHP, on a product or user | `docs/product-and-user-methods.md` |
-| Twig and PHP, on a review | `docs/review-object.md` |
-| Twig only | `docs/twig-variable.md` |
-| PHP only | `docs/php-api.md` |
+| Twig and PHP, on a product or user | `docs/reviews/available-custom-behavior.md` |
+| Twig and PHP, on a review | `docs/reviews/review.md` |
+| Twig only | `docs/reviews/available-functions.md` |
+| PHP only | `docs/reviews/services.md` |
 
 When something works in both, show both forms.
 
