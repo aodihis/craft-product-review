@@ -10,7 +10,7 @@ Params
 | --- | --- |
 | `id` | Required. The ID of the review that will be saved. |
 | `rating` | Required. The rating value for the product, a whole number from 1 to 5. |
-| `comment` | Optional. The reviewer's comment for the product. HTML is sanitized before it is stored. |
+| `comment` | Optional. The reviewer's comment for the product. HTML is sanitized before it is stored. Rejected if it is longer than `maxCharactersPerReview`. |
 
 The customer must be signed in and must own the review.
 

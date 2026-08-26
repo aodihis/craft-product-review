@@ -8,6 +8,7 @@ Create a `product-review.php` file under your `/config` directory with the follo
 return [
     'orderStatusToReview' => 'completed',
     'maxDaysToReview' => 30,
+    'maxCharactersPerReview' => 0,
 ];
 ```
 
@@ -15,6 +16,7 @@ return [
 
 * `orderStatusToReview` - The Commerce order status that makes purchased products reviewable. When an order moves into this status, the plugin creates one review per product in that order.
 * `maxDaysToReview` - How many days the customer has to submit a review, counted from when the review was created. Set it to `0` to leave the window open forever.
+* `maxCharactersPerReview` - How many characters a customer can write in a review comment. Set it to `0` for no limit. The count is taken on what the customer typed, so it matches what they see in the field.
 
 ### Choosing an order status
 

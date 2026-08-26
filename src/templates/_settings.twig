@@ -32,4 +32,13 @@
     errors: settings.getErrors('maxDaysToReview'),
 }) }}
 
-
+{{ forms.textField({
+    label: "Maximum characters per review"|t('product-review'),
+    instructions: "Maximum characters a customer can write in a review comment, counted as they type it. Put 0 for no limit."|t('product-review'),
+    id: 'maxCharactersPerReview',
+    name: 'maxCharactersPerReview',
+    value: settings.maxCharactersPerReview,
+    type: 'number',
+    size: 1,
+    errors: settings.getErrors('maxCharactersPerReview'),
+}) }}

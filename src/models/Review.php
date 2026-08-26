@@ -248,13 +248,26 @@ class Review extends Model
 
     protected function defineRules(): array
     {
-        $maxRating = Plugin::getInstance()->getSettings()->maxRating;
+        $settings = Plugin::getInstance()->getSettings();
+        $maxRating = $settings->maxRating;
         $rules = parent::defineRules();
         $rules[] = [['id', 'productId', 'orderId', 'reviewerId', 'rating', 'comment', 'updateCount', 'dateCreated', 'dateUpdated'], 'safe'];
         $rules[] = [['productId', 'orderId', 'variantIds', 'reviewerId'], 'required'];
         $rules[] = ['rating', 'integer', 'min' => 1, 'max' => $maxRating, 'when' => function ($model) {
             return $model->updateCount > 0;
         }];
+
+        // 0 means no limit, so the rule is left out entirely rather than added with a max of zero.
+        //
+        // This measures the comment as the reviewer typed it. Reviews::saveReview() validates
+        // before it calls sanitizeComment(), so the value in hand here has not been through HTML
+        // Purifier yet — which is the point. Purifying can lengthen a comment, so counting after
+        // it would reject people for characters they never wrote. Moving the sanitize call above
+        // the validate call would silently break that.
+        if ($settings->maxCharactersPerReview > 0) {
+            $rules[] = ['comment', 'string', 'max' => $settings->maxCharactersPerReview];
+        }
+
         $rules[] = ['updateCount', 'validateReviewWindow'];
         return $rules;
     }

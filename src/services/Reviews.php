@@ -164,6 +164,9 @@ class Reviews extends Component
         // this existed are still raw, and escaping is context-dependent anyway — the control panel
         // table needs HTML-escaping, not purified markup, because it truncates and writes through
         // innerHTML.
+        //
+        // Deliberately after validate(): the maxCharactersPerReview rule counts the comment as the
+        // reviewer typed it, and purifying first would count characters they never wrote.
         $model->comment = $this->sanitizeComment($model->comment);
 
         $fields = [

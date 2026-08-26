@@ -50,6 +50,8 @@ return [
     'Purchased products can be reviewed once the order reaches the following status.' => 'Purchased products can be reviewed once the order reaches the following status.',
     'Maximum days to review (put 0 if you want infinite.)' => 'Maximum days to review (put 0 if you want infinite.)',
     'Maximum days for customer to allow review the product after the order status changed to desired one.' => 'Maximum days for customer to allow review the product after the order status changed to desired one.',
+    'Maximum characters per review' => 'Maximum characters per review',
+    'Maximum characters a customer can write in a review comment, counted as they type it. Put 0 for no limit.' => 'Maximum characters a customer can write in a review comment, counted as they type it. Put 0 for no limit.',
 
     // Saving a review
     'Review saved.' => 'Review saved.',
