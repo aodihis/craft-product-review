@@ -435,6 +435,13 @@ class Reviews extends Component
         }
         if ($sort) {
             $query->orderBy($sort);
+            // Every caller sorts on a column that repeats — dateCreated above all, since
+            // createReviewForOrder() writes one row per product in a single pass, so an order's
+            // reviews all share a timestamp to the second. A sort on a non-unique column is not a
+            // total order, which leaves LIMIT/OFFSET free to return a tied row on two consecutive
+            // pages and drop another entirely. The ID breaks the tie; appending it is a no-op for
+            // a sort that is already unique.
+            $query->addOrderBy('reviews.id DESC');
         }
         return $query;
     }
