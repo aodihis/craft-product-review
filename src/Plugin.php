@@ -5,9 +5,7 @@ namespace aodihis\productreview;
 use aodihis\productreview\behaviors\ProductBehavior;
 use aodihis\productreview\behaviors\ProductQueryBehavior;
 use aodihis\productreview\behaviors\UserBehavior;
-use aodihis\productreview\fieldlayoutelements\OrderReviews;
-use aodihis\productreview\fieldlayoutelements\ProductReviews;
-use aodihis\productreview\fieldlayoutelements\UserReviews;
+use aodihis\productreview\fieldlayoutelements\BaseReviewsUiElement;
 use aodihis\productreview\models\Settings;
 use aodihis\productreview\plugin\Services;
 use aodihis\productreview\services\FrontEnd;
@@ -125,17 +123,17 @@ class Plugin extends BasePlugin
             FieldLayout::class,
             FieldLayout::EVENT_DEFINE_UI_ELEMENTS,
             static function (DefineFieldLayoutElementsEvent $event) {
-                $elements = [
-                    Product::class => ProductReviews::class,
-                    Order::class => OrderReviews::class,
-                    User::class => UserReviews::class,
-                ];
-
                 /** @var FieldLayout $layout */
                 $layout = $event->sender;
 
-                if (isset($elements[$layout->type])) {
-                    $event->elements[] = $elements[$layout->type];
+                // The element each UI element belongs to is declared on the class itself, so this
+                // reads the same map the paging endpoint resolves against rather than keeping a
+                // second copy that could drift from it.
+                foreach (BaseReviewsUiElement::SOURCES as $class) {
+                    if ($layout->type === $class::elementType()) {
+                        $event->elements[] = $class;
+                        return;
+                    }
                 }
             }
         );
@@ -246,7 +244,7 @@ class Plugin extends BasePlugin
             function (OrderStatusEvent $event) {
                 // @var OrderHistory $orderHistory
                 $orderHistory = $event->orderHistory;
-                // @var Order $order
+                /** @var Order $order */
                 $order = $event->order;
 
                 if ($orderHistory->getNewStatus()->handle === $this->getSettings()->orderStatusToReview) {

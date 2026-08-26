@@ -3,7 +3,6 @@
 namespace aodihis\productreview\fieldlayoutelements;
 
 use Craft;
-use craft\base\ElementInterface;
 use craft\commerce\elements\Order;
 
 /**
@@ -14,9 +13,17 @@ class OrderReviews extends BaseReviewsUiElement
     /**
      * @inheritdoc
      */
-    protected static function elementType(): string
+    public static function elementType(): string
     {
         return Order::class;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function sourceKey(): string
+    {
+        return 'order';
     }
 
     /**
@@ -26,19 +33,19 @@ class OrderReviews extends BaseReviewsUiElement
      * the pending and expired rows are the point here: they show what the customer was asked to
      * review and never did, which is exactly what someone looking at an order wants to know.
      */
-    protected function criteria(ElementInterface $element): array
+    protected function criteria(int $elementId): array
     {
         return [
             'status' => null,
-            'orderId' => $element->id,
+            'orderId' => $elementId,
         ];
     }
 
     /**
      * @inheritdoc
      *
-     * No reviewer column: every review from one order has the same reviewer, who is already named
-     * on the order.
+     * No reviewer: every review from one order has the same reviewer, who is already named on the
+     * order.
      */
     protected function columns(): array
     {

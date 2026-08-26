@@ -4,7 +4,6 @@ namespace aodihis\productreview\fieldlayoutelements;
 
 use aodihis\productreview\models\Review;
 use Craft;
-use craft\base\ElementInterface;
 use craft\commerce\elements\Product;
 
 /**
@@ -15,9 +14,17 @@ class ProductReviews extends BaseReviewsUiElement
     /**
      * @inheritdoc
      */
-    protected static function elementType(): string
+    public static function elementType(): string
     {
         return Product::class;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function sourceKey(): string
+    {
+        return 'product';
     }
 
     /**
@@ -27,19 +34,19 @@ class ProductReviews extends BaseReviewsUiElement
      * the list would be padded with placeholders no customer has filled in, which say nothing
      * about the product.
      */
-    protected function criteria(ElementInterface $element): array
+    protected function criteria(int $elementId): array
     {
         return [
             'status' => Review::STATUS_LIVE,
-            'productId' => $element->id,
+            'productId' => $elementId,
         ];
     }
 
     /**
      * @inheritdoc
      *
-     * No product column, since every row is about the product being edited, and no status column,
-     * because the criteria above admit live reviews only.
+     * No product, since every card is about the product being edited, and no status, because the
+     * criteria above admit live reviews only.
      */
     protected function columns(): array
     {

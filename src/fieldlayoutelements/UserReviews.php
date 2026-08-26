@@ -3,7 +3,6 @@
 namespace aodihis\productreview\fieldlayoutelements;
 
 use Craft;
-use craft\base\ElementInterface;
 use craft\elements\User;
 
 /**
@@ -14,9 +13,17 @@ class UserReviews extends BaseReviewsUiElement
     /**
      * @inheritdoc
      */
-    protected static function elementType(): string
+    public static function elementType(): string
     {
         return User::class;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function sourceKey(): string
+    {
+        return 'user';
     }
 
     /**
@@ -26,18 +33,18 @@ class UserReviews extends BaseReviewsUiElement
      * as well as what they still owe. Reviews are attributed to the inactive account Commerce
      * creates for a guest checkout, so rows can appear here for someone who has never signed in.
      */
-    protected function criteria(ElementInterface $element): array
+    protected function criteria(int $elementId): array
     {
         return [
             'status' => null,
-            'reviewerId' => $element->id,
+            'reviewerId' => $elementId,
         ];
     }
 
     /**
      * @inheritdoc
      *
-     * No reviewer column: every row belongs to the user being edited.
+     * No reviewer: every card belongs to the user being edited.
      */
     protected function columns(): array
     {

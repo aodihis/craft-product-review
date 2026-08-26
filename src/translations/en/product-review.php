@@ -24,7 +24,6 @@ return [
     'Status' => 'Status',
     'Date' => 'Date',
     'Actions' => 'Actions',
-    'View' => 'View',
     'Any' => 'Any',
     'Choose a customer' => 'Choose a customer',
     'Choose a product' => 'Choose a product',
@@ -39,7 +38,12 @@ return [
     'No one has reviewed this product yet.' => 'No one has reviewed this product yet.',
     'This order has not asked for any reviews.' => 'This order has not asked for any reviews.',
     'This customer has not been asked for any reviews.' => 'This customer has not been asked for any reviews.',
-    'Showing the {count} most recent of {total} reviews.' => 'Showing the {count} most recent of {total} reviews.',
+    'Show more' => 'Show more',
+    'Show less' => 'Show less',
+    'Previous' => 'Previous',
+    'Next' => 'Next',
+    'Page {page} of {totalPages}' => 'Page {page} of {totalPages}',
+    'Couldn’t load reviews.' => 'Couldn’t load reviews.',
 
     // Settings
     'Order Status to review' => 'Order Status to review',
