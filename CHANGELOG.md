@@ -2,10 +2,6 @@
 
 ## 5.2.0 - 2026-08-30
 
-> [!IMPORTANT]
-> `review.plainComment` has been removed. Replace it with `review.renderComment()|striptags`
-> before upgrading.
-
 - Added a `maxCharactersPerReview` setting, capping how long a review comment can be. It defaults to `0`, which is no limit, and the count is taken on what the customer typed rather than on the sanitized result.
 - Removed `review.plainComment`, which duplicated what `|striptags` already does. Use `review.renderComment()` to print a comment.
 - Added review panels that can be added to product, order and user field layouts.
