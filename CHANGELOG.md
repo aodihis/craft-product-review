@@ -1,15 +1,15 @@
 # Release Notes for Product Review
 
-## Unreleased
+## 5.2.0 - 2026-08-30
+
+> [!IMPORTANT]
+> `review.plainComment` has been removed. Replace it with `review.renderComment()|striptags`
+> before upgrading.
 
 - Added a `maxCharactersPerReview` setting, capping how long a review comment can be. It defaults to `0`, which is no limit, and the count is taken on what the customer typed rather than on the sanitized result.
-
 - Removed `review.plainComment`, which duplicated what `|striptags` already does. Use `review.renderComment()` to print a comment.
 - Added review panels that can be added to product, order and user field layouts.
 - Removed the reviewer and product search endpoints, which the rebuilt filters no longer use.
-- Reduced the documentation to what a site integrating the plugin needs, dropping internals and unreleased behaviour.
-- Split the Twig reference so the product and user methods are documented for both Twig and PHP.
-- Restructured the documentation to mirror the published GitBook site page for page.
 - Rebuilt the reviews list filters using Craft’s own element selectors, so they match the rest of the control panel.
 - Added an icon for the Product Review section in the control panel navigation.
 - Fixed a duplicate variant being recorded when an order contained the same variant on more than one line item.
