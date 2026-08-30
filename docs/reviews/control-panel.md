@@ -37,3 +37,27 @@ Upgrading from a version before this permission existed: any non-admin user or g
 The plugin adds a **Rating** column to the Commerce products list, showing each product's average rating.
 
 To show it, open the products list, press the settings gear at the top of the table, and add Rating to the visible columns. You can also sort the list by it. Products with no reviews show `0`.
+
+### Review panels on products, orders and users
+
+You can show a read-only list of reviews on the edit screen for a product, an order, or a customer, by adding it to the relevant field layout.
+
+1. Go to the field layout you want it on:
+
+   - Products: Commerce → System Settings → Product Types → a product type → Product Fields
+   - Orders: Commerce → System Settings → Order Fields
+   - Users: Settings → Users → User Fields
+
+2. Drag the panel from the UI elements at the right of the designer into a tab, and save the layout. Each layout is offered the one panel that suits it:
+
+   | Layout | Panel | Lists |
+   | --- | --- | --- |
+   | Product | Product Reviews | Submitted reviews for this product, with the reviewer, rating, comment and date |
+   | Order | Order Reviews | Every review this order asked for, submitted or not, with the product, rating, comment, status and date |
+   | User | Customer Reviews | Every review this customer has been asked for, submitted or not, with the product, rating, comment, status and date |
+
+The panel lists ten reviews at a time, with paging controls when there are more. Long comments are shortened behind a **Show more** toggle.
+
+{% hint style="info" %}
+The panel is read-only, and it respects the **View product reviews** permission. A user who can edit a product but does not hold that permission sees no panel on it.
+{% endhint %}
