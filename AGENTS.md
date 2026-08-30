@@ -240,9 +240,11 @@ Update the docs when a change adds or alters:
 
 ### How to write them
 
-**Read `.claude/skills/plugin-docs/SKILL.md` before writing or revising anything under `docs/`.** It
-carries the full style guide: the Verbb plugin docs are the model, the audience is a developer
-integrating the plugin rather than one working on it, and it lists what must never be documented.
+**Read `.claude/skills/plugin-docs/SKILL.md`, if you have it, before writing or revising anything
+under `docs/`.** That skill is local agent config rather than part of the repo, so it may not be
+present in your checkout. It carries the full style guide: the Verbb plugin docs are the model, the
+audience is a developer integrating the plugin rather than one working on it, and it lists what must
+never be documented.
 
 The short version of that last part, because it is the rule most often broken: no unreleased or
 unfinished behaviour, no databases or SQL, no internal class surface such as validation rules, the
