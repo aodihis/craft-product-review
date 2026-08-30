@@ -240,11 +240,13 @@ Update the docs when a change adds or alters:
 
 ### How to write them
 
-**Read `.claude/skills/plugin-docs/SKILL.md` before writing or revising anything under `docs/`.** It
-carries the full style guide: the Verbb plugin docs are the model, the audience is a developer
-integrating the plugin rather than one working on it, and it lists what must never be documented.
+The Verbb plugin docs are the model to follow, for example
+<https://verbb.io/craft-plugins/wishlist/docs/get-started/installation-setup>. Write for a developer
+wiring the plugin into their store, not for someone working on the plugin itself: every page should
+answer "how do I use this on my site". Second person, present tense, imperative, one H1 per page,
+and every example verified against the code before it ships.
 
-The short version of that last part, because it is the rule most often broken: no unreleased or
+What must never be documented, because it is the rule most often broken: no unreleased or
 unfinished behaviour, no databases or SQL, no internal class surface such as validation rules, the
 settings model or permission constants, and no re-documenting Craft's own events and APIs.
 
