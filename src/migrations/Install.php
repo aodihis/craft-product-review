@@ -101,6 +101,10 @@ class Install extends Migration
     public function createIndexes(): void
     {
         $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'productId');
+        // Covers the grouped average every product query joins, so it reads the index rather than
+        // the rows. The `productId` index above is left in place: it backs the foreign key, and
+        // dropping an index a foreign key is using is not worth the upgrade risk to save the space.
+        $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, ['productId', 'rating']);
         $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'reviewerId');
         $this->createIndex(null, Table::PRODUCT_REVIEW_REVIEWS, 'orderId');
         $this->createIndex(null, Table::PRODUCT_REVIEW_VARIANTS, 'variantId');

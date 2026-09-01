@@ -2,6 +2,7 @@
 
 namespace aodihis\productreview\models;
 
+use aodihis\productreview\enums\RatingAlgorithm;
 use craft\base\Model;
 
 /**
@@ -30,6 +31,36 @@ class Settings extends Model
 
     public ?string $orderStatusToReview = null;
 
+    /**
+     * Which algorithm works out a product's `averageRating`, as one of the
+     * {@see RatingAlgorithm} values.
+     *
+     * Null or empty means `average`, the plain mean, so an existing site keeps the ratings it
+     * already shows until it opts into something else.
+     */
+    public ?string $ratingAlgorithm = null;
+
+    /**
+     * How much weight the site-wide average carries when `ratingAlgorithm` is `bayesian`, expressed
+     * as a number of reviews. Ignored by every other algorithm.
+     *
+     * A product with this many reviews sits halfway between its own mean and the site-wide one; one
+     * with far more is barely moved. Raising it is harsher on products with few reviews. 0 disables
+     * the adjustment entirely, leaving the plain mean.
+     */
+    public int $bayesianPriorWeight = 10;
+
+    /**
+     * Returns the algorithm to use, resolving the unset and unrecognised cases.
+     *
+     * Named so it does not shadow the `$ratingAlgorithm` property, which stays a plain string
+     * because that is what project config stores.
+     */
+    public function resolveRatingAlgorithm(): RatingAlgorithm
+    {
+        return RatingAlgorithm::fromSetting($this->ratingAlgorithm);
+    }
+
     public function getMaxRating(): int
     {
         return Settings::$defaultMaxRating;
@@ -49,6 +80,15 @@ class Settings extends Model
         // review the moment it is made.
         $rules[] = [['maxDaysToReview'], 'number', 'min' => 0];
         $rules[] = [['maxCharactersPerReview'], 'integer', 'min' => 0];
+        // Left empty on purpose for sites that never set it, which the `in` validator skips.
+        $rules[] = [
+            ['ratingAlgorithm'],
+            'in',
+            'range' => array_column(RatingAlgorithm::cases(), 'value'),
+        ];
+        // A negative weight would drag ratings away from the site average rather than towards it,
+        // and takes the divisor towards zero.
+        $rules[] = [['bayesianPriorWeight'], 'integer', 'min' => 0];
         return $rules;
     }
 }

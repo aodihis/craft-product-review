@@ -44,7 +44,10 @@ elements. Reads go through `craft\db\Query` in `services/Reviews.php`, not the A
 - Behaviors: `ProductBehavior` (`product.getReviews()`, `product.getRatingCountInList()`),
   `UserBehavior` (`user.getReviewHistory()`, `user.getWaitingToReviewItems()`), and
   `ProductQueryBehavior`, which joins an average-rating subquery into *every* product query so
-  `averageRating` works as a table attribute and sort option.
+  `averageRating` works as a table attribute and sort option. Which aggregate that subquery uses is
+  switched by the `ratingAlgorithm` setting (`enums/RatingAlgorithm.php`) — a plain mean, or a
+  Bayesian average weighted by `bayesianPriorWeight`. Anything unset or unrecognised resolves to the
+  plain mean, so a bad config value cannot take the rating column out.
 - Public write endpoint: `ReviewController::actionSave()`.
 - Field layout UI elements in `fieldlayoutelements/`, offered to product, order and user layouts by
   `Plugin::registerFieldLayoutUiElements()` based on the layout's `type`. They are UI elements

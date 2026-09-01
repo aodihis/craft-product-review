@@ -55,7 +55,7 @@ class Plugin extends BasePlugin
      */
     public const PERMISSION_VIEW_REVIEWS = 'productReview-viewReviews';
 
-    public string $schemaVersion = '1.0.0';
+    public string $schemaVersion = '1.0.1';
     public bool $hasCpSettings = true;
     public bool $hasCpSection = true;
 

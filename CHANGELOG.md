@@ -1,5 +1,12 @@
 # Release Notes for Product Review
 
+## Unreleased
+
+- Added a `ratingAlgorithm` setting, choosing between the plain `average` and a `bayesian` average that weights a product’s rating by how many reviews it has. It defaults to `average`, which is the existing behaviour.
+- Added a `bayesianPriorWeight` setting, controlling how many reviews a product needs before its own rating outweighs the catalogue average. It defaults to `10`.
+- Improved product query performance by indexing the columns the average-rating aggregate reads, which measured about four times faster on a catalogue of 20,000 products and 400,000 reviews.
+- Cached the catalogue-wide average the Bayesian algorithm needs, so choosing it no longer costs an extra read of every review on each product query.
+
 ## 5.2.0 - 2026-08-30
 
 - Added a `maxCharactersPerReview` setting, capping how long a review comment can be. It defaults to `0`, which is no limit, and the count is taken on what the customer typed rather than on the sanitized result.

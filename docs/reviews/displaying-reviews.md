@@ -103,3 +103,5 @@ The same applies to `review.product` when you are looping over reviews from `cra
   .limit(10)
   .all() %}
 ```
+
+Out of the box this sorts on the plain mean, so a product with a single 5-star review comes out ahead of one with two hundred reviews averaging 4.8. If that is not the list you want, set `ratingAlgorithm` to `bayesian` in your [configuration](../get-started/configuration.md) and products with more reviews are ranked more confidently.
