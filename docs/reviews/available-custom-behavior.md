@@ -25,7 +25,7 @@ Both work on any user object, not only `currentUser`.
 | --- | --- |
 | `getReviews()` | Get the submitted reviews for this product. |
 | `getRatingCountInList()` | Get list of rating count for this product. |
-| `averageRating` | The mean rating of the submitted reviews. |
+| `averageRating` | The average rating of the submitted reviews. |
 
 `getReviews()`
 
@@ -57,11 +57,13 @@ Example
 
 `averageRating`
 
-The mean rating of all submitted reviews, to two decimal places. Products with no reviews return `0`.
+The average rating of all submitted reviews, to two decimal places. Products with no reviews return `0`.
 
 ```twig
 <p>Average: {{ product.averageRating }}</p>
 ```
+
+By default this is the plain mean. Set `ratingAlgorithm` to `bayesian` in your [configuration](../get-started/configuration.md) to weight it by how many reviews a product has, which gives more useful ordering for "top rated" lists.
 
 This one comes from the product query rather than a method, which is what makes it possible to sort by it.
 

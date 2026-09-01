@@ -52,6 +52,12 @@ return [
     'Maximum days for customer to allow review the product after the order status changed to desired one.' => 'Maximum days for customer to allow review the product after the order status changed to desired one.',
     'Maximum characters per review' => 'Maximum characters per review',
     'Maximum characters a customer can write in a review comment, counted as they type it. Put 0 for no limit.' => 'Maximum characters a customer can write in a review comment, counted as they type it. Put 0 for no limit.',
+    'Rating algorithm' => 'Rating algorithm',
+    'How the average rating for a product is worked out from its reviews.' => 'How the average rating for a product is worked out from its reviews.',
+    'Average' => 'Average',
+    'Bayesian average' => 'Bayesian average',
+    'Bayesian prior weight' => 'Bayesian prior weight',
+    'Only used by the Bayesian average. How many reviews a product needs before its own rating outweighs the site-wide average. Put 0 to turn the adjustment off.' => 'Only used by the Bayesian average. How many reviews a product needs before its own rating outweighs the site-wide average. Put 0 to turn the adjustment off.',
 
     // Saving a review
     'Review saved.' => 'Review saved.',

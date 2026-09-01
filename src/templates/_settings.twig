@@ -32,6 +32,30 @@
     errors: settings.getErrors('maxDaysToReview'),
 }) }}
 
+{{ forms.selectField({
+    label: "Rating algorithm"|t('product-review'),
+    instructions: "How the average rating for a product is worked out from its reviews."|t('product-review'),
+    id: 'ratingAlgorithm',
+    name: 'ratingAlgorithm',
+    options: [
+        { label: "Average"|t('product-review'), value: 'average' },
+        { label: "Bayesian average"|t('product-review'), value: 'bayesian' },
+    ],
+    value: settings.ratingAlgorithm ?: 'average',
+    errors: settings.getErrors('ratingAlgorithm'),
+}) }}
+
+{{ forms.textField({
+    label: "Bayesian prior weight"|t('product-review'),
+    instructions: "Only used by the Bayesian average. How many reviews a product needs before its own rating outweighs the site-wide average. Put 0 to turn the adjustment off."|t('product-review'),
+    id: 'bayesianPriorWeight',
+    name: 'bayesianPriorWeight',
+    value: settings.bayesianPriorWeight,
+    type: 'number',
+    size: 1,
+    errors: settings.getErrors('bayesianPriorWeight'),
+}) }}
+
 {{ forms.textField({
     label: "Maximum characters per review"|t('product-review'),
     instructions: "Maximum characters a customer can write in a review comment, counted as they type it. Put 0 for no limit."|t('product-review'),
