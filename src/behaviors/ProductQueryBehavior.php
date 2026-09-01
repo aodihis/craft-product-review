@@ -55,30 +55,32 @@ class ProductQueryBehavior extends Behavior
 
     /**
      * Builds the Bayesian aggregate: `(sum of ratings + m * C) / (number of ratings + m)`, where
-     * `C` is the mean across every rated review on the site and `m` is the prior weight.
+     * `C` is the mean across every rated review in the catalogue and `m` is the prior weight.
+     *
+     * `C` arrives as a cached constant rather than a subquery. Computing it in SQL made every
+     * product query read the whole reviews table a second time, and it is the same value for every
+     * row — see `Reviews::getCatalogueAverageRating()`.
      *
      * A product with no rating at all short-circuits to 0 rather than to `C`. Reviews are created
      * empty and filled in later, so a product awaiting its first rating would otherwise inherit the
-     * site average and outrank products that have genuinely been rated poorly — and it would sort
-     * differently from a product with no reviews at all, which the left join already scores 0.
+     * catalogue average and outrank products that have genuinely been rated poorly — and it would
+     * sort differently from a product with no reviews at all, which the left join already scores 0.
      */
     private function bayesianExpression(int $priorWeight): string
     {
-        // Interpolated rather than bound: the value is an int, so there is nothing to inject, and a
-        // bound parameter would have to survive being nested in a subquery that is then joined.
+        // Interpolated rather than bound: both values are numbers the plugin produces, so there is
+        // nothing to inject, and a bound parameter would have to survive being nested in a subquery
+        // that is then joined.
         $priorWeight = max(0, $priorWeight);
+        $catalogueAverage = Plugin::getInstance()->getReviews()->getCatalogueAverageRating();
 
-        $siteAverage = sprintf(
-            '(SELECT Coalesce(AVG(rated.rating), 0) FROM %s rated WHERE rated.rating IS NOT NULL)',
-            Table::PRODUCT_REVIEW_REVIEWS
-        );
-
-        // SUM() is cast before dividing so the division stays exact on databases where integer
-        // over integer truncates.
+        // SUM() is cast before dividing so the division stays exact on databases where integer over
+        // integer truncates. %F rather than %f, so a locale that writes decimals with a comma
+        // cannot produce invalid SQL.
         return sprintf(
             'CASE WHEN COUNT(reviews.rating) = 0 THEN 0 ELSE CAST((CAST(SUM(reviews.rating) as decimal(10,4)) + (%1$d * %2$s)) / (COUNT(reviews.rating) + %1$d) as decimal(10,2)) END',
             $priorWeight,
-            $siteAverage
+            sprintf('%.4F', $catalogueAverage)
         );
     }
 }

@@ -59,6 +59,10 @@ Two things to weigh before switching:
 
 Switching algorithms takes effect immediately and changes nothing that is stored, so you can move between them freely.
 
+{% hint style="info" %}
+The catalogue average behind `bayesian` is cached for an hour, and refreshed as soon as a review is submitted. If you change ratings directly in the database, expect up to an hour before it is reflected.
+{% endhint %}
+
 ### Control Panel
 
 You can also manage configuration settings through the Control Panel by visiting Settings → Product Review.

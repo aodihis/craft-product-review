@@ -24,6 +24,25 @@ use yii\base\InvalidConfigException;
 class Reviews extends Component
 {
     /**
+     * How long the catalogue-wide average rating stays cached, in seconds.
+     *
+     * The Bayesian rating algorithm needs the mean across every rated review, which is a full read
+     * of the reviews table, and it would otherwise run on every product query. The value barely
+     * moves once a store has any volume — one new review shifts a mean over thousands by almost
+     * nothing — so serving a slightly old one costs accuracy that rounding to two decimal places
+     * throws away anyway.
+     *
+     * Saving a review clears it, so this window only bounds changes made outside this service, such
+     * as the cascaded delete when a product is removed.
+     */
+    public const CATALOGUE_AVERAGE_CACHE_DURATION = 3600;
+
+    /**
+     * Cache key for {@see getCatalogueAverageRating()}.
+     */
+    private const CATALOGUE_AVERAGE_CACHE_KEY = 'product-review:catalogue-average-rating';
+
+    /**
      *  possible criteria param = [
      *          'status' => 'live' | 'pending' | 'expired' | null (default live;
      *                      null applies no filter, anything else throws)
@@ -206,7 +225,46 @@ class Reviews extends Component
             throw $e;
         }
 
+        // After the commit, so a rolled back save cannot throw away a still-correct cached value.
+        $this->invalidateCatalogueAverageRating();
+
         return true;
+    }
+
+    /**
+     * Returns the mean rating across every submitted review in the catalogue.
+     *
+     * Used by the Bayesian rating algorithm as the value each product's own mean is pulled towards.
+     * Cached for {@see CATALOGUE_AVERAGE_CACHE_DURATION} seconds, because it is read on every
+     * product query but changes very slowly.
+     *
+     * Returns `0.0` when nothing has been rated yet.
+     */
+    public function getCatalogueAverageRating(): float
+    {
+        $average = Craft::$app->getCache()->getOrSet(
+            self::CATALOGUE_AVERAGE_CACHE_KEY,
+            static function() {
+                $value = (new Query())
+                    ->from([Table::PRODUCT_REVIEW_REVIEWS])
+                    ->where(['not', ['rating' => null]])
+                    ->average('rating');
+
+                // average() gives null when no row is rated, and a string on some drivers.
+                return (float)($value ?? 0);
+            },
+            self::CATALOGUE_AVERAGE_CACHE_DURATION
+        );
+
+        return (float)$average;
+    }
+
+    /**
+     * Clears the cached catalogue average, so the next product query recomputes it.
+     */
+    public function invalidateCatalogueAverageRating(): void
+    {
+        Craft::$app->getCache()->delete(self::CATALOGUE_AVERAGE_CACHE_KEY);
     }
 
     /**
